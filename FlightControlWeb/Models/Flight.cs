@@ -11,15 +11,8 @@ namespace FlightControlWeb
         private string id;
 
         [JsonProperty("flight_id")]
-        public string FlightId { 
-            set {
-                id = "dd";
-            }
-            get
-            {
-                return id;
-            }
-        }
+        public string FlightId { get; set; }
+
 
         [JsonProperty("longitude")]
         public double Longitude { get; set; }
@@ -38,6 +31,26 @@ namespace FlightControlWeb
 
         [JsonProperty("is_external")]
         public bool IsExternal { get; set; }
+
+
+        public Flight(FlightPlan f, string id)
+        {
+            FlightId = id;
+            Latitude = f.InitialLocation.Latitude;
+            Longitude = f.InitialLocation.Longitude;
+            Passengers = f.Passengers;
+            CompanyName = f.CompanyName;
+
+        }
+        public Flight(string id , string companyName, long passengers, bool isExternal,double latitude, double longitude)
+        {
+            FlightId = id;
+            CompanyName = companyName;
+            Latitude = latitude;
+            Longitude = longitude;
+            Passengers = passengers;
+            IsExternal = isExternal;
+        }
 
     }
 }

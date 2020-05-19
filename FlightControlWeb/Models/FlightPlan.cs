@@ -3,54 +3,59 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Globalization;
+using Newtonsoft.Json.Converters;
 
 namespace FlightControlWeb
 {
     public partial class FlightPlan
     {
+        private string id;
+
+        [JsonProperty(PropertyName ="passengers")]
         public long Passengers { get; set; }
+
+        [JsonProperty(PropertyName = "company_name")]
         public string CompanyName { get; set; }
+
+        [JsonProperty(PropertyName = "initial_location")]
         public InitialLocation InitialLocation { get; set; }
+
+        [JsonProperty(PropertyName = "segments")]
         public Segment[] Segments { get; set; }
-        public string FlightId { get; set; }
+        public string FlightId { 
+            get
+            {
+                return id;
+            }
+            set
+            {
+                this.id = value;
+            }
+        }
     }
 
     public partial class InitialLocation
     {
-        [JsonProperty("passengers")]
-        public long Passengers { get; set; }
-
-        [JsonProperty("company_name")]
-        public string CompanyName { get; set; }
-
-        [JsonProperty("initial_location")]
-        public InitialLocation Initiallocation { get; set; }
-
-        [JsonProperty("segments")]
-        public Segment[] Segments { get; set; }
-    }
-
-    public partial class InitialLocation
-    {
-        [JsonProperty("longitude")]
+        [JsonProperty(PropertyName = "longitude")]
         public double Longitude { get; set; }
 
-        [JsonProperty("latitude")]
+        [JsonProperty(PropertyName = "latitude")]
         public double Latitude { get; set; }
 
-        [JsonProperty("date_time")]
-        public DateTimeOffset DateTime { get; set; }
+        [JsonProperty(PropertyName = "date_time")]
+        public DateTime DateTime { get; set; }
     }
 
     public partial class Segment
     {
-        [JsonProperty("longitude")]
+        [JsonProperty(PropertyName = "longitude")]
         public double Longitude { get; set; }
 
-        [JsonProperty("latitude")]
+        [JsonProperty(PropertyName = "latitude")]
         public double Latitude { get; set; }
 
-        [JsonProperty("timespan_seconds")]
+        [JsonProperty(PropertyName = "timespan_seconds")]
         public long TimespanSeconds { get; set; }
     }
 }
