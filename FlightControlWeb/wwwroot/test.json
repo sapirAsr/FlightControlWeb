@@ -1,0 +1,30 @@
+{
+  "exclude": [
+    "**/bin",
+    "**/bower_components",
+    "**/jspm_packages",
+    "**/node_modules",
+    "**/obj",
+    "**/platforms"
+  ],
+
+    "passengers": 236,
+    "company_name": "Realmo Air",
+    "initial_location": {
+      "latitude": 4,
+      "longitude": 120,
+      "date_time": "2019-04-27T19:29:26Z"
+    },
+    "segments": [
+      {
+        "longitude": 32,
+        "latitude": 62,
+        "timespan_seconds": 116
+      },
+      {
+        "longitude": 13,
+        "latitude": 7,
+        "timespan_seconds": 956
+      }
+    ]
+  }
