@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -7,6 +8,7 @@ using CsQuery;
 using FlightControlWeb.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -16,14 +18,31 @@ namespace FlightControlWeb.Controllers
     [ApiController]
     public class FlightPlanController : ControllerBase
     {
-        private IFlightPlanManager flightManager = new FlightPlanManager();
+        private FlightPlanManager flightManager = new FlightPlanManager();
+        private ConcurrentDictionary<string, FlightPlan> _flightPlanDic;
+        private IMemoryCache _cache;
+       
+  
 
+        public FlightPlanController(IMemoryCache cache)
+        {
+            //
+            //_flightPlanDic = flightPlanDic;
+            _cache = cache;
+        }
         //function returns the flight plan of the flight with this id
         [HttpGet ("{id}")]
         //api/FlightPlan/{id}
         public ActionResult<FlightPlan> Get(string id)
         {
-            return flightManager.GetFlightById(id);
+            bool get = _cache.TryGetValue(id, out FlightPlan item);
+            if (get)
+            {
+                return item;
+            }
+            return null;
+            //return _flightPlanDic[id];
+           
         }
 
 
@@ -53,7 +72,16 @@ namespace FlightControlWeb.Controllers
                 InitialLocation = new InitialLocation { Latitude = latitude, Longitude = longitude, DateTime = date_time },
                 Segments = segments
             };
-            flightManager.AddFlight(f);
+            string id = flightManager.GenerateId();
+            f.FlightId = id;
+            bool addBool =_cache.TryGetValue("ids", out List<string> ids);
+            if (addBool)
+            {
+                ids.Add(id);
+            }
+           
+            _cache.Set(id, f);
+            //_flightPlanDic[id] = f;
             return f;
         }
 
@@ -62,7 +90,10 @@ namespace FlightControlWeb.Controllers
         //api/Flights/{id}
         public void Delete(string id)
         {
-            flightManager.DeleteFlight(id);
+            _cache.Remove(id);
+            
+          // FlightPlan temp;
+          //_flightPlanDic.TryRemove(id, out temp);
 
         }
     }
