@@ -52,7 +52,10 @@ namespace FlightControlWeb
                 endpoints.MapControllers();
             });
             List<string> flightIdList = new List<string>();
+            List<string> serverIds = new List<string>();
             cache.Set("ids", flightIdList);
+            cache.Set("servers", serverIds);
+
         }
     }
 }

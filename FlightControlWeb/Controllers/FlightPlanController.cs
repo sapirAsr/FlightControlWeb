@@ -19,15 +19,12 @@ namespace FlightControlWeb.Controllers
     public class FlightPlanController : ControllerBase
     {
         private FlightPlanManager flightManager = new FlightPlanManager();
-        private ConcurrentDictionary<string, FlightPlan> _flightPlanDic;
         private IMemoryCache _cache;
        
   
 
         public FlightPlanController(IMemoryCache cache)
         {
-            //
-            //_flightPlanDic = flightPlanDic;
             _cache = cache;
         }
         //function returns the flight plan of the flight with this id
@@ -41,8 +38,7 @@ namespace FlightControlWeb.Controllers
                 return item;
             }
             return null;
-            //return _flightPlanDic[id];
-           
+            
         }
 
 
@@ -81,7 +77,6 @@ namespace FlightControlWeb.Controllers
             }
            
             _cache.Set(id, f);
-            //_flightPlanDic[id] = f;
             return f;
         }
 
@@ -91,10 +86,11 @@ namespace FlightControlWeb.Controllers
         public void Delete(string id)
         {
             _cache.Remove(id);
-            
-          // FlightPlan temp;
-          //_flightPlanDic.TryRemove(id, out temp);
-
+            bool deleteBool = _cache.TryGetValue("ids", out List<string> ids);
+            if (deleteBool)
+            {
+                ids.Remove(id);
+            }
         }
     }
 }

@@ -2,20 +2,18 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Hello World!</title>
+    <title>Flight Control</title>
+    <link rel="stylesheet" type="text/css" href="css/Style.css">
+
 </head>
 <body>
-    <h1>HELLO World !!</h1>
-    <script>
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-    var myObj = JSON.parse(this.responseText);
-    document.getElementById("demo").innerHTML = myObj.name;
-    }
-    };
-    xmlhttp.open("GET", "test.json", true);
-    xmlhttp.send();
-    </script>
+    <button type="button" onclick="loadFlights()">Request data</button>
+    <table id="flightsTable">
+        <tr>
+            <th>Internal Flights</th>
+        </tr>
+
+    </table>
+    <script src="js/client.js"></script>
 </body>
 </html>

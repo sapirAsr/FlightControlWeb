@@ -1,0 +1,10 @@
+﻿tr {
+    cursor: pointer;
+    transition: all .25s ease-in-out
+}
+
+.selected {
+    color: red;
+    font-weight: bold;
+    
+}
