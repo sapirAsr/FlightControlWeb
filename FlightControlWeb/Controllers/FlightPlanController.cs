@@ -20,15 +20,15 @@ namespace FlightControlWeb.Controllers
     {
         private FlightPlanManager flightManager = new FlightPlanManager();
         private IMemoryCache _cache;
-       
-  
+
+
 
         public FlightPlanController(IMemoryCache cache)
         {
             _cache = cache;
         }
         //function returns the flight plan of the flight with this id
-        [HttpGet ("{id}")]
+        [HttpGet("{id}")]
         //api/FlightPlan/{id}
         public ActionResult<FlightPlan> Get(string id)
         {
@@ -38,7 +38,7 @@ namespace FlightControlWeb.Controllers
                 return item;
             }
             return null;
-            
+
         }
 
 
@@ -56,7 +56,7 @@ namespace FlightControlWeb.Controllers
             DateTime date_time = jsonObj["initial_location"]["date_time"];
             Segment[] segments = new Segment[jsonObj["segments"].Count];
             int i = 0;
-            foreach(var segment in jsonObj["segments"])
+            foreach (var segment in jsonObj["segments"])
             {
                 segments[i] = new Segment { Latitude = segment["latitude"], Longitude = segment["longitude"], TimespanSeconds = segment["timespan_seconds"] };
                 i++;
@@ -70,27 +70,15 @@ namespace FlightControlWeb.Controllers
             };
             string id = flightManager.GenerateId();
             f.FlightId = id;
-            bool addBool =_cache.TryGetValue("ids", out List<string> ids);
+            bool addBool = _cache.TryGetValue("ids", out List<string> ids);
             if (addBool)
             {
                 ids.Add(id);
             }
-           
+
             _cache.Set(id, f);
             return f;
-        }
 
-        //function deletes the flight with this id
-        [HttpDelete("{id}")]
-        //api/Flights/{id}
-        public void Delete(string id)
-        {
-            _cache.Remove(id);
-            bool deleteBool = _cache.TryGetValue("ids", out List<string> ids);
-            if (deleteBool)
-            {
-                ids.Remove(id);
-            }
         }
     }
 }

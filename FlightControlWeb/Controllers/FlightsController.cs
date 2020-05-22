@@ -78,16 +78,16 @@ namespace FlightControlWeb.Controllers
                     _cache.TryGetValue(id, out FlightPlan fp);
                     Flight flight = new Flight(fp, fp.FlightId);
                     listflights.Add(flight);
-                    
+
                 }
             }
-           
+
             return listflights;
         }
-         public DateTime addTimeSpans(FlightPlan flightPlan)
+        public DateTime addTimeSpans(FlightPlan flightPlan)
         {
             DateTime flightDate = flightPlan.InitialLocation.DateTime;
-            foreach(var segment in flightPlan.Segments)
+            foreach (var segment in flightPlan.Segments)
             {
                 TimeSpan seconds = new TimeSpan(0, 0, (int)segment.TimespanSeconds);
                 flightDate.Add(seconds);
@@ -95,6 +95,20 @@ namespace FlightControlWeb.Controllers
             return flightDate;
         }
 
-        
+
+
+        //function deletes the flight with this id
+        [HttpDelete("{id}")]
+        //api/Flights/{id}
+        public void Delete(string id)
+        {
+            _cache.Remove(id);
+            bool deleteBool = _cache.TryGetValue("ids", out List<string> ids);
+            if (deleteBool)
+            {
+                ids.Remove(id);
+            }
+
+        }
     }
 }
