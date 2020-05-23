@@ -173,6 +173,94 @@ function deleteFlightDetails(x) {
     }
     
 }
+$('#txtUploadFile').on('change', function (e) {
+    var json;
+
    
+        var files = e.target.files; // FileList object
+
+        // files is a FileList of File objects. List some properties.
+        var output = [];
+        for (var i = 0, f; f = files[i]; i++) {
+            var reader = new FileReader();
+
+            // Closure to capture the file information.
+            reader.onload = (function (theFile) {
+                return function (e) {
+                    console.log('e readAsText = ', e);
+                    console.log('e readAsText target = ', e.target);
+                    try {
+                        json = JSON.parse(e.target.result);
+                        var request = new XMLHttpRequest();
+                        request.open("POST", "/api/FlightPlan");
+                        request.setRequestHeader("Content-Type", "application/json");
+                        request.send(JSON.stringify(json));
+                        alert('json global var has been set to parsed json of this file here it is unevaled = \n' + JSON.stringify(json));
+                    } catch (ex) {
+                        alert('ex when trying to parse json = ' + ex);
+                    }
+                }
+            })(f);
+            reader.readAsText(f);
+        }
+});
+ 
+
+
+    /**
+    var fileUpload = $("#txtUploadFile").get(0);
+    var files = fileUpload.files;
+    console.log(files);
+    // Create FormData object  
+    var fileData = new FormData();
+
+    // Looping over all files and add it to FormData object  
+    for (var i = 0; i < files.length; i++) {
+        fileData.append(files[i].name, files[i]);
+    }
+    console.log(fileData);
+
+    var object = {};
+    fileData.forEach((value, key) => {
+        // Reflect.has in favor of: object.hasOwnProperty(key)
+        if (!Reflect.has(object, key)) {
+            object[key] = value;
+            return;
+        }
+        if (!Array.isArray(object[key])) {
+            object[key] = [object[key]];
+        }
+        object[key].push(value);
+    });
+    
+    var json = JSON.stringify(object);
+    var request = new XMLHttpRequest();
+    request.open("POST", "/api/FlightPlan");
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(json);
+    /**
+    $.ajax({
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        url: '/api/FlightPlan',
+        type: 'POST',
+        data: json,
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function (file) {
+            $("#fileProgress").hide();
+            $("#lblMessage").html("<b>" + file.name + "</b> has been uploaded.");
+        },
+        error: function (xhr, status, p3, p4) {
+            var err = "Error " + " " + status + " " + p3 + " " + p4;
+            if (xhr.responseText && xhr.responseText[0] == "{")
+                err = JSON.parse(xhr.responseText).Message;
+            console.log(err);
+        }
+    });   
+*/
 
 
