@@ -56,6 +56,7 @@ namespace FlightControlWeb.Controllers
             DateTime date_time = jsonObj["initial_location"]["date_time"];
             Segment[] segments = new Segment[jsonObj["segments"].Count];
             int i = 0;
+           // Console.WriteLine(jsonObj["segments"]);
             foreach (var segment in jsonObj["segments"])
             {
                 segments[i] = new Segment { Latitude = segment["latitude"], Longitude = segment["longitude"], TimespanSeconds = segment["timespan_seconds"] };
