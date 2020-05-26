@@ -20,21 +20,51 @@
             crossorigin=""></script>
 </head>
 <body onload="functionToBeExecuted()">
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
             <div class="col-sm-8" id="map">
                 <div id="mapid"></div>
 
             </div>
             <div class="col-sm-4" id="table_flights">
-                <table id="flightsTable" class="table">
+                <table id="internalFlightsTable" class="table">
                     <thead class="thaed">
                         Internal Flights
+                        <tr>
+                            <th>
+                                Flight ID
+                            </th>
+                            <th>
+                                Airline
+                            </th>
+                        </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="internal_table_body">
                     </tbody>
                 </table>
+               
+                
+            </div>
+        </div>
+        <div class="row">
 
+            <div class="col-sm-8" id="Details"></div>
+            <div class="col-sm-4" id="external">
+                <table id="externalFlightsTable" class="table">
+                    <thead class="thaed">
+                        external Flights
+                        <tr>
+                            <th>
+                                Flight ID
+                            </th>
+                            <th>
+                                Airline
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="external_table_body">
+                    </tbody>
+                </table>
                 <div>
                     <form id="form1" runat="server">
                         <input type="file" name="UploadFile" id="txtUploadFile" class="makethispretty" />
@@ -43,10 +73,6 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div id="Details"></div>
-        </div>
-    </div>
     <!-- javascript file -->
     <script src="js/client.js"></script>
 </body>

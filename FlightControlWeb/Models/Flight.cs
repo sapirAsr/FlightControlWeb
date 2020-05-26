@@ -33,7 +33,8 @@ namespace FlightControlWeb
         [JsonProperty("is_external")]
         public bool IsExternal { get; set; }
 
-
+        public Flight() { }
+        
         public Flight(FlightPlan f, string id)
         {
             FlightId = id;

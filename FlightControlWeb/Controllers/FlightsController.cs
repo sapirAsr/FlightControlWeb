@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
-
 namespace FlightControlWeb.Controllers
 {
     [Route("api/[controller]")]
@@ -29,7 +28,9 @@ namespace FlightControlWeb.Controllers
             List<Flight> listflights = new List<Flight>();
             if (relative_to != null)
             {
-                bool sync = relative_to.Contains("sync_all");
+                string requestStr = Request.QueryString.Value;
+                bool sync = requestStr.Contains("sync_all");
+                //bool sync = Request.Query.ContainsKey("sync_all");
                 DateTime currTime = DateTime.Parse(relative_to).ToUniversalTime();
                 bool addBool = _cache.TryGetValue("ids", out List<string> ids);
                 Console.WriteLine(relative_to);
@@ -48,15 +49,19 @@ namespace FlightControlWeb.Controllers
                 }
                 if (sync)
                 {
+                    Console.WriteLine("***");
                     bool servers = _cache.TryGetValue("servers", out List<string> serverIds);
                     foreach (string id in serverIds)
                     {
                         _cache.TryGetValue(id, out Server server);
                         string strFlights = string.Empty;
-                        string url = server.ServerUrl;
-                        //TODO sen the relative to
+                        string url = server.ServerUrl + "/api/Flights?relative_to=" + relative_to;
+                        List<Flight> flights = new List<Flight>();
+
+
                         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                         request.AutomaticDecompression = DecompressionMethods.GZip;
+                        request.Method = "GET";
 
                         using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
                         using (Stream stream = response.GetResponseStream())
@@ -64,10 +69,23 @@ namespace FlightControlWeb.Controllers
                         {
                             //read the content
                             strFlights = reader.ReadToEnd();
+                            reader.Close();
                         };
                         //TODO is_external - true 
-                        List<Flight> flights = JsonConvert.DeserializeObject<List<Flight>>(strFlights);
+                        try
+                        {
+                            flights = JsonConvert.DeserializeObject<List<Flight>>(strFlights);
+                        }
+                        catch (Exception)
+                        {
+
+                        }
+                        foreach(Flight f in flights)
+                        {
+                            f.IsExternal = true;
+                        }
                         listflights.AddRange(flights);
+                       
                     }
                 }
             }
