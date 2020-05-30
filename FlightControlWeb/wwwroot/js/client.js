@@ -15,7 +15,8 @@ function functionToBeExecuted() {
         var currentDate = date.toISOString().substr(0, 19) + "Z";
         xhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                var flightArray = JSON.parse(this.responseText);             
+                var flightArray = JSON.parse(this.responseText);
+                //console.log(flightArray);
                 addMarkers(flightArray);              
                 for (i in flightArray) {
                     var flight = flightArray[i];
@@ -51,7 +52,7 @@ function functionToBeExecuted() {
         //"/api/Flights?relative_to=" + currentDate + "&sync_all"
         xhttp.open("GET", "/api/Flights?relative_to=" + currentDate + "&sync_all", true);
         xhttp.send();
-    }, 5000);
+    }, 3000);
     initMap();   
 }
 
@@ -109,7 +110,6 @@ function addMarkers(array) {
     var planeIcon = L.icon({
         iconUrl: 'lib/plane.png',
         iconSize: [24,24], // size of the icon
-       // popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
     });
     for (i in array) {    
         var flight = array[i];
@@ -117,6 +117,8 @@ function addMarkers(array) {
         var latitude = flight["latitude"];
         var id = flight["flightId"];
         var marker = L.marker([latitude, longitude], { icon: planeIcon }).addTo(mymap);
+        console.log(longitude);
+        console.log(latitude);
         markerDict[id] = marker;
         marker.on('click', function () {
             marker.bindPopup(id).openPopup();
@@ -287,6 +289,8 @@ function flightDetails(id) {
 }
 
 function getDetailsExternal(id) {
+    var details = document.getElementById("Details");
+    details.innerHTML = "";
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {

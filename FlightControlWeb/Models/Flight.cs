@@ -28,7 +28,7 @@ namespace FlightControlWeb
         public string CompanyName { get; set; }
 
         //[JsonProperty("date_time")]
-       // public DateTime DateTime { get; set; }
+        public DateTime DateTime { get; set; }
 
         [JsonProperty("is_external")]
         public bool IsExternal { get; set; }
@@ -42,9 +42,10 @@ namespace FlightControlWeb
             Longitude = f.InitialLocation.Longitude;
             Passengers = f.Passengers;
             CompanyName = f.CompanyName;
+            DateTime = f.InitialLocation.DateTime;
 
         }
-        public Flight(string id , string companyName, long passengers, bool isExternal,double latitude, double longitude)
+        public Flight(string id , string companyName, long passengers, bool isExternal,double latitude, double longitude, DateTime dateTime)
         {
             FlightId = id;
             CompanyName = companyName;
@@ -52,6 +53,7 @@ namespace FlightControlWeb
             Longitude = longitude;
             Passengers = passengers;
             IsExternal = isExternal;
+            DateTime = dateTime;
         }
 
         // Generate a random number between two numbers  

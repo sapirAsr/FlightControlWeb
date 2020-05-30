@@ -30,26 +30,16 @@ namespace FlightControlWeb.Controllers
             {
                 string requestStr = Request.QueryString.Value;
                 bool sync = requestStr.Contains("sync_all");
-                //bool sync = Request.Query.ContainsKey("sync_all");
-                DateTime currTime = DateTime.Parse(relative_to).ToUniversalTime();
-                bool addBool = _cache.TryGetValue("ids", out List<string> ids);
-                Console.WriteLine(relative_to);
-                foreach (string id in ids)
-                {
-                    _cache.TryGetValue(id, out FlightPlan fp);
-                    DateTime flightDate = addTimeSpans(fp);
-                    Console.WriteLine(flightDate.ToString());
-                    int result = DateTime.Compare(currTime, flightDate);
-                    if (result <= 0)
-                    {
-                        Flight flight = new Flight(fp, fp.FlightId);
-                        CalcLocation(flight, currTime);
-                        listflights.Add(flight);
-                    }
-                }
+                DateTime relativeTime = DateTime.Parse(relative_to).ToUniversalTime();
+                List<Flight> internalFlights = getInternalFlights(relativeTime);
+                listflights.AddRange(internalFlights);
+
                 if (sync)
                 {
-                    Console.WriteLine("***");
+                    //List<Flight> externalFlights = getExternalFlights(relativeTime);
+                    //listflights.AddRange(externalFlights);
+
+
                     bool servers = _cache.TryGetValue("servers", out List<string> serverIds);
                     foreach (string id in serverIds)
                     {
@@ -62,31 +52,30 @@ namespace FlightControlWeb.Controllers
                         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                         request.AutomaticDecompression = DecompressionMethods.GZip;
                         request.Method = "GET";
-
-                        using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                        using (Stream stream = response.GetResponseStream())
-                        using (StreamReader reader = new StreamReader(stream))
-                        {
-                            //read the content
-                            strFlights = reader.ReadToEnd();
-                            reader.Close();
-                        };
-                        //TODO is_external - true 
                         try
                         {
+                            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                            using (Stream stream = response.GetResponseStream())
+                            using (StreamReader reader = new StreamReader(stream))
+                            {
+                                //read the content
+                                strFlights = reader.ReadToEnd();
+                                reader.Close();
+                            };
                             flights = JsonConvert.DeserializeObject<List<Flight>>(strFlights);
                         }
                         catch (Exception)
                         {
 
                         }
-                        foreach(Flight f in flights)
+                        foreach (Flight f in flights)
                         {
                             f.IsExternal = true;
                         }
                         listflights.AddRange(flights);
-                       
+
                     }
+
                 }
             }
             else
@@ -99,7 +88,135 @@ namespace FlightControlWeb.Controllers
                     listflights.Add(flight);
                 }
             }
-            return listflights;
+                return listflights;
+
+            
+        }
+
+
+        public List<Flight> getInternalFlights(DateTime relativeTime)
+        {
+            List<Flight> flights = new List<Flight>();
+            _cache.TryGetValue("ids", out List<string> ids);
+            DateTime startFlightDate, currFlightDate;
+            Segment[] segments;
+
+            foreach (string id in ids)
+            {
+                _cache.TryGetValue(id, out FlightPlan flightPlan);
+                currFlightDate = flightPlan.InitialLocation.DateTime.ToUniversalTime();
+                startFlightDate = flightPlan.InitialLocation.DateTime.ToUniversalTime();
+                segments = flightPlan.Segments;
+                int index = 0;
+                int len = segments.Length;
+                if (startFlightDate > relativeTime)
+                {
+                    // This Flight didnt started yet.
+                    continue;
+                }
+                // Stop when we are in the segment or there are no more segments.
+                while ((startFlightDate <= relativeTime) && (index < len))
+                {
+                    currFlightDate = startFlightDate;
+                    // Each time- add the timespan seconds of the segments.
+                    startFlightDate = startFlightDate.AddSeconds(segments[index].TimespanSeconds);
+                    index++;
+                }
+                // If we are in the segment (the flight didnt finished yet).
+                if (startFlightDate >= relativeTime)
+                {
+                    // Add flight to list.
+                    Flight flight = CalcLocation(relativeTime, currFlightDate, flightPlan, index, segments);
+                    flights.Add(flight);
+                }
+            }
+            return flights;
+        }
+
+
+        private Flight CalcLocation(DateTime relativeDate, DateTime currTimeFlifgt, FlightPlan flightPlan, int index, Segment[] flightSegments)
+        {
+            double startLongtitude = 0, endLongtitude, startLatitude = 0, endLatitude, finalLongtitude, finalLatitude;
+            double timePassed, fracRate;
+            // Find how much time passed from segment till now.
+            timePassed = relativeDate.Subtract(currTimeFlifgt).TotalSeconds;
+            // Find the time ratio.
+            fracRate = timePassed / flightSegments[index - 1].TimespanSeconds;
+            // Check if we are in the first segment.
+            if (index == 1)
+            {
+                // The last coordinate is from Initial_Location.
+                startLongtitude = flightPlan.InitialLocation.Longitude;
+                startLatitude = flightPlan.InitialLocation.Latitude;
+                Console.WriteLine(startLongtitude); 
+                Console.WriteLine(startLatitude);
+
+            }
+            else
+            {
+                // The last coordinate is from last segment.
+                startLongtitude = flightSegments[index - 2].Longitude;
+                startLatitude = flightSegments[index - 2].Latitude;
+            }
+            // The current segment's coordinates.
+            endLongtitude = flightSegments[index - 1].Longitude;
+            endLatitude = flightSegments[index - 1].Latitude;
+            // Linear interpolation
+
+            finalLatitude = startLatitude + (fracRate * (endLatitude - startLatitude));
+            finalLongtitude = startLongtitude + (fracRate * (endLongtitude - startLongtitude));
+
+            // Create new Flight with the details we found.
+            Flight flight = new Flight(flightPlan.FlightId, flightPlan.CompanyName, 
+                flightPlan.Passengers, false, finalLatitude, finalLongtitude, flightPlan.InitialLocation.DateTime);
+            //flight.Longitude = finalLongtitude;
+            //flight.Latitude = finalLatitude;
+            //flight.FlightId = flightPlan.FlightId;
+            //flight.IsExternal = false;
+            //flight.CompanyName = flightPlan.CompanyName;
+            //flight.Passengers = flightPlan.Passengers;
+            //flight.DateTime = flightPlan.InitialLocation.DateTime;
+            return flight;
+        }
+
+        public List<Flight> getExternalFlights(DateTime relativeTime)
+        {
+            List<Flight> flights = new List<Flight>();
+            bool servers = _cache.TryGetValue("servers", out List<string> serverIds);
+            List<Flight> externalFlights = new List<Flight>();
+
+            foreach (string id in serverIds)
+            {
+                _cache.TryGetValue(id, out Server server);
+                string strFlights = string.Empty;
+                string url = server.ServerUrl + "/api/Flights?relative_to=" + relativeTime;
+
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.AutomaticDecompression = DecompressionMethods.GZip;
+                request.Method = "GET";
+                try
+                {
+                    using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                    using (Stream stream = response.GetResponseStream())
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        //read the content
+                        strFlights = reader.ReadToEnd();
+                        reader.Close();
+                    };
+                    flights = JsonConvert.DeserializeObject<List<Flight>>(strFlights);
+                    externalFlights.AddRange(flights);
+                }
+                catch (Exception)
+                {
+
+                }
+                foreach (Flight f in externalFlights)
+                {
+                    f.IsExternal = true;
+                }
+            }
+            return externalFlights;
         }
 
         public DateTime addTimeSpans(FlightPlan flightPlan)
@@ -138,54 +255,6 @@ namespace FlightControlWeb.Controllers
             return sum;
         }
 
-        public void CalcLocation(Flight f, DateTime utcDate) {
-            bool addBool = _cache.TryGetValue(f.FlightId, out FlightPlan fp);
-            double totalTime = utcDate.Subtract(fp.InitialLocation.DateTime).TotalSeconds;
-            int len = fp.Segments.Length;
-            double frac = totalTime / fp.Segments[len - 1].TimespanSeconds;
-            double longitude1, latitude1;
-            if (len == 1)
-            {
-                longitude1 = f.Longitude;
-                latitude1 = f.Latitude;
-            }
-            else
-            {
-                longitude1 = fp.Segments[len - 2].Longitude;
-                latitude1 = fp.Segments[len - 2].Latitude;
-            }
-            double longitude2 = fp.Segments[len - 1].Longitude;
-            double latitude2 = fp.Segments[len - 1].Latitude;
-            double distance = Math.Sqrt((Math.Pow(longitude2 - longitude1, 2) + Math.Pow(latitude2 - latitude1, 2)));
-            double currDistance = frac * distance;
-            f.Longitude = longitude2 - (currDistance * (longitude2 - longitude1) / distance);
-            f.Latitude = latitude2 - (currDistance * (latitude2 - latitude1) / distance);
-            /** bool isOk= _cache.TryGetValue(f.FlightId, out FlightPlan flight);
-             var segments = flight.Segments.ToList();
-             int timeSpan = sumSegments(flight);
-             TimeSpan dif = utcDate.Subtract(flight.InitialLocation.DateTime);
-             long dif_sec = (long)dif.TotalSeconds;
-             if (timeSpan > dif_sec)
-             {
-                 double cameFromLati = flight.InitialLocation.Latitude;
-                 double cameFromLong = flight.InitialLocation.Longitude;
-                 foreach (Segment element in flight.Segments)
-                 {
-                     if (dif_sec >= element.TimespanSeconds)
-                     {
-                         dif_sec -= element.TimespanSeconds;
-                     }
-                     else
-                     {
-                         double relative = (double)dif_sec / (double)element.TimespanSeconds;                       
-                         f.Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
-                         f.Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
-                         break;
-                     }
-                     cameFromLati = element.Latitude;
-                     cameFromLong = element.Longitude;
-                 }
-             }*/
-        }
+       
     }
 }

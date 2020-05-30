@@ -10,7 +10,7 @@ namespace FlightControlWeb.Models
     {
         private static List<Flight> flights = new List<Flight>()
         {
-            new Flight("s","Realmo Air", 236, false,4, 120)
+            //new Flight("s","Realmo Air", 236, false,4, 120)
         };
         public void AddFlight(Flight f)
         {
