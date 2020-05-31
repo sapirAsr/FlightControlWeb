@@ -23,78 +23,22 @@ namespace FlightControlWeb.Controllers
         }
         [HttpGet]
         // /api/Flights?relative_to=<DATE_TIME>
-        public IEnumerable<Flight> GetAllFlights(string? relative_to = null)
+        public async Task<List<Flight>> GetAllFlights(string? relative_to = null)
         {
             List<Flight> listflights = new List<Flight>();
-            if (relative_to != null)
+            string requestStr = Request.QueryString.Value;
+            bool sync = requestStr.Contains("sync_all");
+            DateTime relativeTime = DateTime.Parse(relative_to).ToUniversalTime();
+            List<Flight> internalFlights = getInternalFlights(relativeTime);
+            listflights.AddRange(internalFlights);
+            if (sync)
             {
-                string requestStr = Request.QueryString.Value;
-                bool sync = requestStr.Contains("sync_all");
-                DateTime relativeTime = DateTime.Parse(relative_to).ToUniversalTime();
-                List<Flight> internalFlights = getInternalFlights(relativeTime);
-                listflights.AddRange(internalFlights);
-
-                if (sync)
-                {
-                    //List<Flight> externalFlights = getExternalFlights(relativeTime);
-                    //listflights.AddRange(externalFlights);
-
-
-                    bool servers = _cache.TryGetValue("servers", out List<string> serverIds);
-                    foreach (string id in serverIds)
-                    {
-                        _cache.TryGetValue(id, out Server server);
-                        string strFlights = string.Empty;
-                        string url = server.ServerUrl + "/api/Flights?relative_to=" + relative_to;
-                        List<Flight> flights = new List<Flight>();
-
-
-                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                        request.AutomaticDecompression = DecompressionMethods.GZip;
-                        request.Method = "GET";
-                        try
-                        {
-                            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                            using (Stream stream = response.GetResponseStream())
-                            using (StreamReader reader = new StreamReader(stream))
-                            {
-                                //read the content
-                                strFlights = reader.ReadToEnd();
-                                reader.Close();
-                            };
-                            flights = JsonConvert.DeserializeObject<List<Flight>>(strFlights);
-                        }
-                        catch (Exception)
-                        {
-
-                        }
-                        foreach (Flight f in flights)
-                        {
-                            f.IsExternal = true;
-                        }
-                        listflights.AddRange(flights);
-
-                    }
-
-                }
+                List<Flight> externalFlights = await getExternalFlights(relative_to);
+                listflights.AddRange(externalFlights);
             }
-            else
-            {
-                bool addBool = _cache.TryGetValue("ids", out List<string> ids);
-                foreach (string id in ids)
-                {
-                    _cache.TryGetValue(id, out FlightPlan fp);
-                    Flight flight = new Flight(fp, fp.FlightId);
-                    listflights.Add(flight);
-                }
-            }
-                return listflights;
-
-            
+            return listflights;
         }
-
-
-        public List<Flight> getInternalFlights(DateTime relativeTime)
+        private List<Flight> getInternalFlights(DateTime relativeTime)
         {
             List<Flight> flights = new List<Flight>();
             _cache.TryGetValue("ids", out List<string> ids);
@@ -133,7 +77,6 @@ namespace FlightControlWeb.Controllers
             return flights;
         }
 
-
         private Flight CalcLocation(DateTime relativeDate, DateTime currTimeFlifgt, FlightPlan flightPlan, int index, Segment[] flightSegments)
         {
             double startLongtitude = 0, endLongtitude, startLatitude = 0, endLatitude, finalLongtitude, finalLatitude;
@@ -148,7 +91,7 @@ namespace FlightControlWeb.Controllers
                 // The last coordinate is from Initial_Location.
                 startLongtitude = flightPlan.InitialLocation.Longitude;
                 startLatitude = flightPlan.InitialLocation.Latitude;
-                Console.WriteLine(startLongtitude); 
+                Console.WriteLine(startLongtitude);
                 Console.WriteLine(startLatitude);
 
             }
@@ -167,69 +110,58 @@ namespace FlightControlWeb.Controllers
             finalLongtitude = startLongtitude + (fracRate * (endLongtitude - startLongtitude));
 
             // Create new Flight with the details we found.
-            Flight flight = new Flight(flightPlan.FlightId, flightPlan.CompanyName, 
+            Flight flight = new Flight(flightPlan.FlightId, flightPlan.CompanyName,
                 flightPlan.Passengers, false, finalLatitude, finalLongtitude, flightPlan.InitialLocation.DateTime);
-            //flight.Longitude = finalLongtitude;
-            //flight.Latitude = finalLatitude;
-            //flight.FlightId = flightPlan.FlightId;
-            //flight.IsExternal = false;
-            //flight.CompanyName = flightPlan.CompanyName;
-            //flight.Passengers = flightPlan.Passengers;
-            //flight.DateTime = flightPlan.InitialLocation.DateTime;
             return flight;
         }
 
-        public List<Flight> getExternalFlights(DateTime relativeTime)
+        private async Task<List<Flight>> getExternalFlights(string relativeTime)
         {
-            List<Flight> flights = new List<Flight>();
-            bool servers = _cache.TryGetValue("servers", out List<string> serverIds);
+            //List<Flight> flights = new List<Flight>();
+            _cache.TryGetValue("servers", out List<string> serverIds);
             List<Flight> externalFlights = new List<Flight>();
-
             foreach (string id in serverIds)
             {
-                _cache.TryGetValue(id, out Server server);
-                string strFlights = string.Empty;
+                _cache.TryGetValue(id, out Server server);              
                 string url = server.ServerUrl + "/api/Flights?relative_to=" + relativeTime;
+                List<Flight> flights = await getFlights(url);
+                externalFlights.AddRange(flights);
 
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.AutomaticDecompression = DecompressionMethods.GZip;
-                request.Method = "GET";
-                try
-                {
-                    using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                    using (Stream stream = response.GetResponseStream())
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        //read the content
-                        strFlights = reader.ReadToEnd();
-                        reader.Close();
-                    };
-                    flights = JsonConvert.DeserializeObject<List<Flight>>(strFlights);
-                    externalFlights.AddRange(flights);
-                }
-                catch (Exception)
-                {
-
-                }
-                foreach (Flight f in externalFlights)
-                {
-                    f.IsExternal = true;
-                }
+            }
+            foreach (Flight f in externalFlights)
+            {
+                f.IsExternal = true;
             }
             return externalFlights;
         }
-
-        public DateTime addTimeSpans(FlightPlan flightPlan)
+        private async Task<List<Flight>> getFlights(string url)
         {
-            DateTime flightDate = flightPlan.InitialLocation.DateTime;
-            foreach (var segment in flightPlan.Segments)
+            List<Flight> flights = new List<Flight>();
+            _cache.TryGetValue("servers", out List<string> serverIds);
+            string strFlights = string.Empty;
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.AutomaticDecompression = DecompressionMethods.GZip;
+            request.Method = "GET";
+            try
             {
-                TimeSpan seconds = new TimeSpan(0, 0, (int)segment.TimespanSeconds);
-                flightDate.Add(seconds);
-            }
-            return flightDate;
-        }
+                using (HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync())
+                using (Stream stream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    //read the content
+                    strFlights = reader.ReadToEnd();
+                    reader.Close();
+                };
+                flights = JsonConvert.DeserializeObject<List<Flight>>(strFlights);
 
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return flights;
+        }
+      
         //function deletes the flight with this id
         [HttpDelete("{id}")]
         //api/Flights/{id}
@@ -241,20 +173,6 @@ namespace FlightControlWeb.Controllers
             {
                 ids.Remove(id);
             }
-
         }
-
-        public int sumSegments(FlightPlan flightPlan)
-        {
-            int sum = 0;
-            foreach (var segment in flightPlan.Segments)
-            {
-               sum += (int)segment.TimespanSeconds;
-              
-            }
-            return sum;
-        }
-
-       
     }
 }

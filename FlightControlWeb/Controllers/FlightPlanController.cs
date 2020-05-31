@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CsQuery;
@@ -12,6 +14,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+
 namespace FlightControlWeb.Controllers
 {
     [Route("api/[controller]")]
@@ -20,8 +23,6 @@ namespace FlightControlWeb.Controllers
     {
         private FlightPlanManager flightManager = new FlightPlanManager();
         private IMemoryCache _cache;
-
-
 
         public FlightPlanController(IMemoryCache cache)
         {
@@ -45,41 +46,56 @@ namespace FlightControlWeb.Controllers
         //function post the flight plan of a new flight
         [HttpPost]
         // api/FlightPlan
-        public FlightPlan Post(JsonElement planJson)
+        public ActionResult<FlightPlan> Post(JsonElement planJson)
         {
-            string plan = planJson.ToString();
-            dynamic jsonObj = JsonConvert.DeserializeObject(plan);
-            long passengers = jsonObj["passengers"];
-            string company_name = jsonObj["company_name"];
-            double longitude = jsonObj["initial_location"]["longitude"];
-            double latitude = jsonObj["initial_location"]["latitude"];
-            DateTime date_time = jsonObj["initial_location"]["date_time"];
-            Segment[] segments = new Segment[jsonObj["segments"].Count];
-            int i = 0;
-           // Console.WriteLine(jsonObj["segments"]);
-            foreach (var segment in jsonObj["segments"])
+            try
             {
-                segments[i] = new Segment { Latitude = segment["latitude"], Longitude = segment["longitude"], TimespanSeconds = segment["timespan_seconds"] };
-                i++;
+                string plan = planJson.ToString();
+                dynamic jsonObj = JsonConvert.DeserializeObject(plan);
+                long passengers = jsonObj["passengers"];
+                string company_name = jsonObj["company_name"];
+                double longitude = jsonObj["initial_location"]["longitude"];
+                double latitude = jsonObj["initial_location"]["latitude"];
+                DateTime date_time = jsonObj["initial_location"]["date_time"];
+                Segment[] segments = new Segment[jsonObj["segments"].Count];
+                int i = 0;
+                foreach (var segment in jsonObj["segments"])
+                {
+                    segments[i] = new Segment
+                    {
+                        Latitude = segment["latitude"],
+                        Longitude = segment["longitude"],
+                        TimespanSeconds = segment["timespan_seconds"]
+                    };
+                    i++;
+                }
+                FlightPlan f = new FlightPlan
+                {
+                    CompanyName = company_name,
+                    Passengers = passengers,
+                    InitialLocation = new InitialLocation
+                    {
+                        Latitude = latitude,
+                        Longitude = longitude,
+                        DateTime = date_time
+                    },
+                    Segments = segments
+                };
+                string id = flightManager.GenerateId();
+                f.FlightId = id;
+                bool addBool = _cache.TryGetValue("ids", out List<string> ids);
+                if (addBool)
+                {
+                    ids.Add(id);
+                }
+                _cache.Set(id, f);
+                return f;
             }
-            FlightPlan f = new FlightPlan
-            {
-                CompanyName = company_name,
-                Passengers = passengers,
-                InitialLocation = new InitialLocation { Latitude = latitude, Longitude = longitude, DateTime = date_time },
-                Segments = segments
-            };
-            string id = flightManager.GenerateId();
-            f.FlightId = id;
-            bool addBool = _cache.TryGetValue("ids", out List<string> ids);
-            if (addBool)
-            {
-                ids.Add(id);
+            catch (Exception)
+            {              
+                return BadRequest("Worng json file format!");
             }
-
-            _cache.Set(id, f);
-            return f;
-
-        }
+          
+       }
     }
 }
