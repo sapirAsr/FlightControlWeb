@@ -27,9 +27,9 @@
 
             </div>
             <div class="col-sm-4" id="table_flights">
+                <h3>Internal Flights</h3>
                 <table id="internalFlightsTable" class="table">
-                    <thead class="thaed">
-                        Internal Flights
+                    <thead class="thaed">                      
                         <tr>
                             <th>
                                 Flight ID
@@ -48,11 +48,16 @@
         </div>
         <div class="row">
 
-            <div class="col-sm-8" id="Details"></div>
+            <div class="col-sm-6" id="Details"></div>
+            <div class="col-sm-2" id="Upload">
+                <form id="form1" runat="server">
+                    <input type="file" name="UploadFile" id="txtUploadFile" class="makethispretty" />                  
+                </form>
+            </div>
             <div class="col-sm-4" id="external">
+                <h3> External Flights</h3>
                 <table id="externalFlightsTable" class="table">
                     <thead class="thaed">
-                        external Flights
                         <tr>
                             <th>
                                 Flight ID
@@ -65,12 +70,6 @@
                     <tbody id="external_table_body">
                     </tbody>
                 </table>
-                <div>
-                    <form id="form1" runat="server">
-                        <input type="file" name="UploadFile" id="txtUploadFile" class="makethispretty" />
-                        <input type="submit">
-                    </form>
-                </div>
             </div>
         </div>
     <!-- javascript file -->
