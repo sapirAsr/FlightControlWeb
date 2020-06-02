@@ -136,8 +136,7 @@ namespace FlightControlWeb.Controllers
         }
         private async Task<List<Flight>> getFlights(string url)
         {
-            List<Flight> flights = new List<Flight>();
-            _cache.TryGetValue("servers", out List<string> serverIds);
+            List<Flight> flights = new List<Flight>();            
             string strFlights = string.Empty;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.AutomaticDecompression = DecompressionMethods.GZip;
@@ -157,7 +156,7 @@ namespace FlightControlWeb.Controllers
             }
             catch (Exception)
             {
-                return null;
+               // return null;
             }
             return flights;
         }

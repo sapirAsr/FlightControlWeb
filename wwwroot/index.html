@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Flight Control</title>
+    <!-- CSS File -->
+    <link rel="stylesheet" type="text/css" href="css/Style.css">
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <!-- fontawesome for icons -->
+    <script src="https://kit.fontawesome.com/b17124b3fb.js" crossorigin="anonymous"></script>
+    <!-- jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+    <!-- Map JS -->
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+            integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+            crossorigin=""></script>
+</head>
+<body onload="functionToBeExecuted()">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-8" id="map">
+                <div id="mapid"></div>
+
+            </div>
+            <div class="col-sm-4" id="table_flights">
+                <h3>Internal Flights</h3>
+                <table id="internalFlightsTable" class="table">
+                    <thead class="thaed">                      
+                        <tr>
+                            <th>
+                                Flight ID
+                            </th>
+                            <th>
+                                Airline
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="internal_table_body">
+                    </tbody>
+                </table>
+               
+                
+            </div>
+        </div>
+        <div class="row">
+
+            <div class="col-sm-6" id="Details"></div>
+            <div class="col-sm-2" id="Upload">
+                <form id="form1" runat="server">
+                    <input type="file" name="UploadFile" id="txtUploadFile" class="makethispretty" />                  
+                </form>
+            </div>
+            <div class="col-sm-4" id="external">
+                <h3> External Flights</h3>
+                <table id="externalFlightsTable" class="table">
+                    <thead class="thaed">
+                        <tr>
+                            <th>
+                                Flight ID
+                            </th>
+                            <th>
+                                Airline
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="external_table_body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <!-- javascript file -->
+    <script src="js/client.js"></script>
+</body>
+</html>

@@ -1,57 +1,53 @@
 ﻿//global 
-var mymap;
-var markerDict = {};
-var dictPolyLine = {};
-var activeInternalFlights = [];
-var activeExternalFlights = [];
-var activeFlights = [];
-
-var idRowSelected = null;
-var markerSelected = null;
-
-var planeIcon = L.icon({
+let mymap;
+let markerDict = {};
+let dictPolyLine = {};
+let activeInternalFlights = [];
+let activeExternalFlights = [];
+let activeFlights = [];
+let idRowSelected = null;
+let markerSelected = null;
+let planeIcon = L.icon({
     iconUrl: 'lib/plane.png',
     iconSize: [24, 24], // size of the icon
 });
-var clickedIcon = L.icon({
+let clickedIcon = L.icon({
     iconUrl: 'lib/travel.png',
     iconSize: [24, 24], // size of the icon
 });
 
+
 function functionToBeExecuted() {
     setInterval(function () {
-        var xhttp = new XMLHttpRequest();
-        //$('#internal_table_body').empty();
-        //activeInternalFlights = [];
-        //activeExternalFlights = [];
-        var date = new Date();
-        var currentDate = date.toISOString().substr(0, 19) + "Z";
+        let xhttp = new XMLHttpRequest();
+        let date = new Date();
+        let currentDate = date.toISOString().substr(0, 19) + "Z";
         xhttp.onreadystatechange = function () {
             if (this.readyState === 4) {
                 if (this.status === 200) {
-                    var flightArray = JSON.parse(this.responseText);
-                    var listOfIds = [];
-                    addMarkers(flightArray);
-                    var i;
-                    for (i = 0; i < flightArray.length; i++) {                       
-                        var flight = flightArray[i];                       
+                    let flightArray = JSON.parse(this.responseText);
+                    let listOfIds = [];
+                    addMarkers(flightArray);                   
+                    let i;
+                    for (i = 0; i < flightArray.length; i++) {  
+                        let flight = flightArray[i];                       
                         if (!activeInternalFlights.includes(flight.flightId) && !activeExternalFlights.includes(flight.flightId)) {
-                            var isExternal = flight["isExternal"];
+                            let isExternal = flight["isExternal"];
                             if (!isExternal) {
                                 loadInternalFlight(flight);
                                 activeInternalFlights.push(flight.flightId);
-                                activeFlights.push(flight["flightId"]);
-                            } else {
+                                activeFlights.push(flight.flightId);
+                            } else {                               
                                 loadExternalFlight(flight);
                                 activeExternalFlights.push(flight.flightId);
                                 activeFlights.push(flight.flightId);                               
                             }
                             if (idRowSelected !== null) {
-                                var row = document.getElementById(idRowSelected);
+                                let row = document.getElementById(idRowSelected);
                                 if (row !== null) {
                                     row.style.backgroundColor = "yellow";
                                     row.className += " selected";
-                                }
+                                }                            
                             }
                         }
                         listOfIds.push(flight.flightId);                   
@@ -63,9 +59,7 @@ function functionToBeExecuted() {
                             deleteFlightDetails(activeFlights[i]);
                         }
                     }                 
-                } else {
-                    console.log("********");
-                    console.log(this.status);
+                } else {                   
                     console.log("Error", xhttp.statusText);
                     alert(xhttp.statusText);
                 } 
@@ -76,39 +70,21 @@ function functionToBeExecuted() {
     }, 1000);
     initMap();   
 }
-
-/**
-function checkIfFlightIsOver() {
-    var idClass = $("#flightDetails").attr("class");
-    if (idClass !== null) {
-       // console.log(idClass);
-        deleteDetails(idClass);
-        deleteTrajectory(idClass);
-    }
-}
-
-function deleteDetails(id) {
-    if (!activeInternalFlights.includes(id) && !activeExternalFlights.includes(id)) {
-        var details = document.getElementById("Details");
-        details.innerHTML = "";
-    }
-} */
-function deleteTrajectory(id) {  
-    for (var poly in dictPolyLine[id]) {      
+function deleteTrajectory(id) {
+    console.log(dictPolyLine);
+    for (var poly in dictPolyLine[id]) {
+        console.log(dictPolyLine[id][poly]);
         mymap.removeLayer(dictPolyLine[id][poly]);
     }
     dictPolyLine[id] = [];
 }
-
 function loadExternalFlight(flight) {
-   // $('#external_table_body').empty();
     $("#external_table_body").append("<tr class='select'" + "id='" + flight.flightId + "'" + "><td class='select'>" + flight.flightId + "</td>" +
         "<td class='select'>" + flight.companyName + "</td></tr>");
     $(".select").on("click", function () {
         selectExternalFlight();
     });
 }
-
 function loadInternalFlight(flight) {
     $("#internal_table_body").append("<tr class='select'" + "id='" + flight.flightId + "'" + "><td>" + flight.flightId + "</td>" +
         "<td >" + flight.companyName + "</td>" + "<td class='delete'>" +
@@ -118,14 +94,12 @@ function loadInternalFlight(flight) {
     });
     $(".delete").on("click", function(event) {
         event.stopPropagation();      
-        var id = this.closest("tr").cells[0].innerHTML;
+        let id = this.closest("tr").cells[0].innerHTML;
         deleteFromServer(id);
         deleteFlightDetails(id);
         $(this).closest("tr").remove();
     });
 }
-
-
 function initMap() {
     mymap = L.map('mapid').setView([32.006333,34.873331,], 13);
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoic2FwaXJhc3IiLCJhIjoiY2thbDlxaDcxMHMzNTJzcGloMGl2dWJwcSJ9.BiS3Rh5E7nvb1L1zyCcjuQ', {
@@ -138,82 +112,123 @@ function initMap() {
     }).addTo(mymap);
     mymap.on('click', onMapClick);
 }
-
 function onMapClick() {
-    for (var key in dictPolyLine) {      
-        for (var poly in dictPolyLine[key]) {
-            mymap.removeLayer(dictPolyLine[key][poly]);
-        }
-    }
-    dictPolyLine = {};
+   for (var key in dictPolyLine) {      
+       for (var poly in dictPolyLine[key]) {
+           mymap.removeLayer(dictPolyLine[key][poly]);
+       }
+   }
+    dictPolyLine = {};  
     markerSelected = null;
-    var flightD = document.getElementById("Details");
+    let flightD = document.getElementById("Details");
     flightD.innerHTML = "";
-    var rowsNotSelected = document.getElementsByClassName("selected");
-    var row = rowsNotSelected[0];
+    let rowsNotSelected = document.getElementsByClassName("selected");
+    let row = rowsNotSelected[0];
     row.style.backgroundColor = "";
     row.classList.remove('selected');
     if (idRowSelected !== null) {
-        var row = document.getElementById(idRowSelected);
-        if (row !== null) {
-            row.style.backgroundColor = "";
-            row.classList.remove('selected');
+        let rowSelected = document.getElementById(idRowSelected);
+        if (rowSelected !== null) {
+            rowSelected.style.backgroundColor = "";
+            rowSelected.classList.remove('selected');
         }
         idRowSelected = null;
-
     } 
-
 }
-
 function addMarkers(array) {
     for (var key in markerDict) {
-        markerDict[key].remove();
-    }
-    
-    for (i in array) {    
-        var flight = array[i];
-        var longitude = flight["longitude"];
-        var latitude = flight["latitude"];
-        var id = flight["flightId"];
-        var marker;
+        mymap.removeLayer(markerDict[key]);
+    }    
+    for (i in array) {
+        let flight = array[i];
+        let longitude = flight["longitude"];
+        let latitude = flight["latitude"];
+        let id = flight["flightId"];        
+        let marker;
         if (id !== markerSelected) {
              marker = L.marker([latitude, longitude], { icon: planeIcon }).addTo(mymap);
         } else {
              marker = L.marker([latitude, longitude], { icon: clickedIcon }).addTo(mymap);
         }
         markerDict[id] = marker;
-        marker.on('click', function () {
-            if (markerSelected !== id) {
-                markerSelected = id;
-                marker.setIcon(clickedIcon);
-                flightDetails(id);
-                selectFlightFromMap(id);
-                showTrajectory(id);
-            }
-        });    
+        onMarkerClick(flight);
+            
     }
 }
 
+function onMarkerClick(flight) {
+    let id = flight["flightId"];
+    let isExternal = flight["isExternal"];
+    let marker = markerDict[id];
+    marker.on('click', function () {
+        markerSelected = id;       
+        if (!isExternal) {
+            flightDetails(id);
+            showTrajectory(id);
+        } else {
+            if (markerSelected !== null) {
+                for (var key in dictPolyLine) {
+                    for (var poly in dictPolyLine[key]) {
+                        mymap.removeLayer(dictPolyLine[key][poly]);
+                    }
+                }
+            }
+            //get the details and show the trajectory
+            getDetailsExternal(id);
+        }
+        marker.setIcon(clickedIcon);
+        selectFlightFromMap(id);
+    });
+}
+function addExternalMarker(flight) { 
+    let id = flight["flightId"];
+    console.log(id);
+    markerDict[id].remove();
+    let longitude = flight["longitude"];
+    let latitude = flight["latitude"]; 
+    let marker;
+    if (id !== markerSelected) {
+        marker = L.marker([latitude, longitude], { icon: planeIcon }).addTo(mymap);
+    } else {
+        marker = L.marker([latitude, longitude], { icon: clickedIcon }).addTo(mymap);
+    }
+    markerDict[id] = marker;
+    marker.on('click', function () {
+        if (markerSelected !== id) {
+            if (markerSelected !== null) {
+                for (var key in dictPolyLine) {
+                    for (var poly in dictPolyLine[key]) {
+                        mymap.removeLayer(dictPolyLine[key][poly]);
+                    }
+                }
+            }
+            markerSelected = id;
+            marker.setIcon(clickedIcon);            
+            selectFlightFromMap(id);           
+            getDetailsExternal(id);          
+        }
+    });    
+}
 function showTrajectory(id) { 
-    var listPolyLines = [];
-    var xhttp = new XMLHttpRequest();
+    let listPolyLines = [];
+    let xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (this.readyState === 4) {
             if (this.status === 200) {
-                var flightPlan = JSON.parse(this.responseText);
-                var initialPoint = flightPlan.initialLocation;
-                var initialLongtitude = initialPoint["longitude"];
-                var initialLatitude = initialPoint["latitude"];
-                var segments = flightPlan["segments"];
-                var len = flightPlan["segments"].length;
+                let flightPlan = JSON.parse(this.responseText);
+                let initialPoint = flightPlan.initialLocation;
+                let initialLongtitude = initialPoint["longitude"];
+                let initialLatitude = initialPoint["latitude"];
+                let segments = flightPlan["segments"];
+                let len = flightPlan["segments"].length;
                 for (var i = 0; i < len; i++) {
-                    var endPoint = segments[i];
-                    var endLongtitude = endPoint["longitude"];
-                    var endLatitude = endPoint["latitude"];
-                    var start = new L.LatLng(initialLatitude, initialLongtitude);
-                    var end = new L.LatLng(endLatitude, endLongtitude);
-                    var pointList = [start, end];
-                    var firstpolyline = new L.Polyline(pointList, {
+                    let endPoint = segments[i];
+                    let endLongtitude = endPoint["longitude"];
+                    let endLatitude = endPoint["latitude"];
+                    let start = new L.LatLng(initialLatitude, initialLongtitude);
+                    let end = new L.LatLng(endLatitude, endLongtitude);
+                    let pointList = [start, end];
+                    let firstpolyline = new L.Polyline(pointList, {
                         color: 'red',
                         weight: 5,
                         opacity: 0.5,
@@ -234,36 +249,35 @@ function showTrajectory(id) {
     xhttp.open("GET", "/api/FlightPlan/" + id, true);
     xhttp.send();
 }
-
 function selectFlightFromMap(id) {
     idRowSelected = id;
-    var row = document.getElementById(id);  
+    markerSelected = id;
+    let row = document.getElementById(id);  
     row.style.backgroundColor = "yellow";
     row.className += " selected";
 }
-
 function selectFlight() { 
-    var table = document.getElementById('internalFlightsTable');
-    var rows = table.getElementsByTagName('tr');
+    let table = document.getElementById('internalFlightsTable');
+    let rows = table.getElementsByTagName('tr');
     for (var i = 0; i < rows.length; i++) {
-        // Take each cell
-        var row = rows[i];
-        // do something on onclick event for cell
+        // Take each row
+        let row = rows[i];
+        // do something on onclick event for row
         row.onclick = function () {
-            // Get the row id where the cell exists
-            var rowId = this.rowIndex;
-            //var rowsNotSelected = table.getElementsByTagName('tr');
+            // Get the row id 
+            let rowId = this.rowIndex;
             for (var row = 0; row < rows.length; row++) {
                 rows[row].style.backgroundColor = "";
                 rows[row].classList.remove('selected');
             }
-            var rowSelected = table.getElementsByTagName('tr')[rowId];
+            let rowSelected = table.getElementsByTagName('tr')[rowId];
             rowSelected.style.backgroundColor = "yellow";
             rowSelected.className += " selected";
             if (idRowSelected !== rowSelected.cells[0].innerHTML) {
+                deleteTrajectory(idRowSelected);
                 idRowSelected = rowSelected.cells[0].innerHTML;
                 flightDetails(rowSelected.cells[0].innerHTML);
-                var marker = markerDict[idRowSelected];
+                let marker = markerDict[idRowSelected];
                 marker.setIcon(clickedIcon);
                 markerSelected = idRowSelected;
                 showTrajectory(idRowSelected);
@@ -271,47 +285,48 @@ function selectFlight() {
         };
     }
 }
-
 function selectExternalFlight() {
-    var table = document.getElementById('externalFlightsTable');
-    var cells = table.getElementsByTagName('td');
-    for (var i = 0; i < cells.length; i++) {
-        // Take each cell
-        var cell = cells[i];
+    let table = document.getElementById('externalFlightsTable');
+    let rows = table.getElementsByTagName('tr');
+    for (var i = 0; i < rows.length; i++) {
+        // Take each row
+        let row = rows[i];
         // do something on onclick event for cell
-        cell.onclick = function () {
+        row.onclick = function () {
             // Get the row id where the cell exists
-            var rowId = this.parentNode.rowIndex;
-            var rowsNotSelected = table.getElementsByTagName('tr');
-            for (var row = 0; row < rowsNotSelected.length; row++) {
-                rowsNotSelected[row].style.backgroundColor = "";
-                rowsNotSelected[row].classList.remove('selected');
+            let rowId = this.rowIndex;
+            for (var row = 0; row < rows.length; row++) {
+                rows[row].style.backgroundColor = "";
+                rows[row].classList.remove('selected');
             }
-            var rowSelected = table.getElementsByTagName('tr')[rowId];
+            let rowSelected = table.getElementsByTagName('tr')[rowId];
             rowSelected.style.backgroundColor = "yellow";
             rowSelected.className += " selected";
-            idRowSelected = rowSelected.cells[0].innerHTML;
-            flightDetails(rowSelected.cells[0].innerHTML);
-            var marker = markerDict[idRowSelected];
-            marker.bindPopup(idRowSelected).openPopup();
+            if (idRowSelected !== rowSelected.cells[0].innerHTML) {
+                deleteTrajectory(idRowSelected);
+                idRowSelected = rowSelected.cells[0].innerHTML;
+                getDetailsExternal(idRowSelected);
+                let marker = markerDict[idRowSelected];
+                marker.setIcon(clickedIcon);
+                markerSelected = idRowSelected;              
+            }
         };
     }
 }
-
 function flightDetails(id) {
-    var details = document.getElementById("Details");
+    let details = document.getElementById("Details");
     details.innerHTML = "";
     dictPolyLine = {};
 
     if (activeInternalFlights.includes(id)) {
-        var details = document.getElementById("Details");
+        details = document.getElementById("Details");
         details.innerHTML = "";
-        var xhttp = new XMLHttpRequest();
+        let xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
             if (this.readyState === 4) {
                 if (this.status === 200) {
-                    var flight = JSON.parse(this.responseText);
-                    parseFlightDetails(flight, id);
+                    let flight = JSON.parse(this.responseText);
+                    parseInternalFlightDetails(flight, id);
                     
                 } else {
                     alert("error in getting flight details.");
@@ -324,19 +339,18 @@ function flightDetails(id) {
         getDetailsExternal(id);
     }
 }
-
 function getDetailsExternal(id) {
-    var details = document.getElementById("Details");
+    let details = document.getElementById("Details");
     details.innerHTML = "";
-    var xhttp = new XMLHttpRequest();
+    let xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (this.readyState === 4) {
             if (this.status === 200) {
-                var servers = JSON.parse(this.responseText);
+                let servers = JSON.parse(this.responseText);
                 for (i in servers) {
-                    var server = servers[i];
-                    var serverUrl = server["serverUrl"];
-                    var url = serverUrl + "/api/FlightPlan/" + id;
+                    let server = servers[i];
+                    let serverUrl = server["serverUrl"];
+                    let url = serverUrl + "/api/FlightPlan/" + id;
                     getFlightPlan(url, id);
                 }
             } else {
@@ -348,46 +362,43 @@ function getDetailsExternal(id) {
     xhttp.send();
 
 }
-
 function externalTrajectory(flight) {
-    var listPolyLines = [];
-    var initialPoint = flight.initial_location;;
-    var initialLongtitude = initialPoint["longitude"];
-    var initialLatitude = initialPoint["latitude"];
-    var segments = flight["segments"];
-    var len = flight["segments"].length;
+    let listPolyLines = [];
+    let initialPoint = flight.initial_location;
+    let initialLongtitude = initialPoint["longitude"];
+    let initialLatitude = initialPoint["latitude"];
+    let segments = flight["segments"];
+    let len = flight["segments"].length;
     for (var i = 0; i < len; i++) {
-        var endPoint = segments[i];
-        var endLongtitude = endPoint["longitude"];
-        var endLatitude = endPoint["latitude"];
-        var start = new L.LatLng(initialLatitude, initialLongtitude);
-        var end = new L.LatLng(endLatitude, endLongtitude);
-        var pointList = [start, end];
-        var firstpolyline = new L.Polyline(pointList, {
+        let endPoint = segments[i];
+        let endLongtitude = endPoint["longitude"];
+        let endLatitude = endPoint["latitude"];
+        let start = new L.LatLng(initialLatitude, initialLongtitude);
+        let end = new L.LatLng(endLatitude, endLongtitude);
+        let pointList = [start, end];
+        let firstpolyline = new L.Polyline(pointList, {
             color: 'red',
             weight: 5,
             opacity: 0.5,
             smoothFactor: 1
         });
         firstpolyline.addTo(mymap);
-        listPolyLines.push(firstpolyline);
-       
+        listPolyLines.push(firstpolyline);       
         initialLatitude = endLatitude;
         initialLongtitude = endLongtitude;
     }
     dictPolyLine[flight.flightId] = listPolyLines;
 }
-
-
 function getFlightPlan(url, id) {
-    var details = document.getElementById("Details");
+    let details = document.getElementById("Details");
     details.innerHTML = "";
-    var xhttp = new XMLHttpRequest();
+    let xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (this.readyState === 4) {
             if (this.status === 200) {
-                var flight = JSON.parse(this.responseText);
-                parseFlightDetails(flight, id);
+                let flight = JSON.parse(this.responseText);
+                parseExternalFlightDetails(flight, id);
+                externalTrajectory(flight);
             } else {
                 alert("error in getting external flight details");
             }
@@ -395,42 +406,36 @@ function getFlightPlan(url, id) {
     };
     xhttp.open("GET",url, true);
     xhttp.send();
-
 }
-
 function deleteflight(id) {
     deleteFromServer(id);
     deleteFlightDetails(id);  
 }
-
 function deleteFromServer(id) {
-    var xhttp = new XMLHttpRequest();
+    let xhttp = new XMLHttpRequest();
     xhttp.open("DELETE", "/api/Flights/" + id, true);
     xhttp.send(null);
 }
 function deleteFlightDetails(x) {
-    var details = document.getElementsByClassName(x);
+    let details = document.getElementsByClassName(x);
     details.innerHTML = "";
     for (i in details) {
         details[i].innerHTML = "";
     }
-    
 }
 $('#txtUploadFile').on('change', function (e) {
-    var json;
-    var files = e.target.files; // FileList object
+    let json;
+    let files = e.target.files; // FileList object
     // files is a FileList of File objects. List some properties.
-    var output = [];
+    let output = [];
     for (var i = 0, f; f = files[i]; i++) {
-        var reader = new FileReader();
+        let reader = new FileReader();
         // Closure to capture the file information.
         reader.onload = (function (theFile) {
             return function (e) {
-                console.log('e readAsText = ', e);
-                console.log('e readAsText target = ', e.target);
                 try {
                     json = JSON.stringify(e.target.result);
-                    var request = new XMLHttpRequest();
+                    let request = new XMLHttpRequest();
                     request.open("POST", "/api/FlightPlan",true);
                     request.setRequestHeader("Content-Type", "application/json");
                     request.onreadystatechange = function () {//Call a function when the state changes.
@@ -439,9 +444,7 @@ $('#txtUploadFile').on('change', function (e) {
                         }
                     };
                     request.send(json);
-                   
                 } catch (ex) {
-                    
                     alert('ex when trying to upload json file: ' + ex);
                 }
             };
@@ -449,45 +452,84 @@ $('#txtUploadFile').on('change', function (e) {
         reader.readAsText(f);
     }
 });
-
-
-function parseFlightDetails(flight, id) {
-    var heading = document.createElement("H3");
+function parseExternalFlightDetails(flight, id) {
+    let heading = document.createElement("H3");
     heading.innerHTML = "Flight Details";
     document.getElementById("Details").appendChild(heading);
     heading.setAttribute("class", id);
     heading.setAttribute("id", "flightDetails");
-    var flightId = document.createElement("P");                 // Create a <p> element
+    let flightId = document.createElement("P");                 // Create a <p> element
     flightId.innerHTML = "Flight id: " + id;                // Insert text
     document.getElementById("Details").appendChild(flightId);
     flightId.setAttribute("class", id);
-    var company = flight["companyName"];
-    var companyName = document.createElement("P");                 // Create a <p> element
+    let company = flight.company_name;
+    let companyName = document.createElement("P");                 // Create a <p> element
     companyName.innerHTML = "Company: " + company;                // Insert text
     companyName.setAttribute("class", id);
     document.getElementById("Details").appendChild(companyName);
-    var numPassengers = flight["passengers"];
-    var passengers = document.createElement("P");                 // Create a <p> element
-    passengers.innerHTML = "Passengers: " + numPassengers;                // Insert text
+    let numPassengers = flight.passengers;
+    let passengers = document.createElement("P");                 // Create a <p> element
+    passengers.innerHTML = "Passengers: " + numPassengers;   
     document.getElementById("Details").appendChild(passengers);
     passengers.setAttribute("class", id);
-    var initial = flight["initialLocation"];
-    var date = initial["dateTime"];
-    var dateTime = document.createElement("P");                 // Create a <p> element
+    let initial = flight.initial_location;
+    let date = initial.date_time;
+    let dateTime = document.createElement("P");                 // Create a <p> element
     dateTime.innerHTML = "Date: " + date;                // Insert text
     dateTime.setAttribute("class", id);
     document.getElementById("Details").appendChild(dateTime);
-    var segemnts = flight["segments"];
-    var total = 0;
-    for (i in segemnts) {
-        var timespan = segemnts[i];
-        var time = timespan["timespanSeconds"];
+    let segments = flight.segments;
+    let total = 0;
+    for (i in segments) {
+        let timespan = segments[i];
+        let time = timespan.timespan_seconds;
         total += parseInt(time);
     }
-    var temp = Date.parse(date);
-    var d = new Date(temp);
+    let temp = Date.parse(date);
+    let d = new Date(temp);
     d.setSeconds(d.getSeconds() + total);
-    var landing = document.createElement("P");                 // Create a <p> element
+    let landing = document.createElement("P");                 // Create a <p> element
+    landing.innerHTML = "Landing time: " + d.toUTCString();                // Insert text
+    document.getElementById("Details").appendChild(landing);
+    landing.setAttribute("class", id);    
+}
+function parseInternalFlightDetails(flight, id){
+    let heading = document.createElement("H3");
+    heading.innerHTML = "Flight Details";
+    document.getElementById("Details").appendChild(heading);
+    heading.setAttribute("class", id);
+    heading.setAttribute("id", "flightDetails");
+    let flightId = document.createElement("P");                 // Create a <p> element
+    flightId.innerHTML = "Flight id: " + id;                // Insert text
+    document.getElementById("Details").appendChild(flightId);
+    flightId.setAttribute("class", id);
+    let company = flight["companyName"];
+    let companyName = document.createElement("P");                 // Create a <p> element
+    companyName.innerHTML = "Company: " + company;                // Insert text
+    companyName.setAttribute("class", id);
+    document.getElementById("Details").appendChild(companyName);
+    let numPassengers = flight["passengers"];
+    let passengers = document.createElement("P");                 // Create a <p> element
+    passengers.innerHTML = "Passengers: " + numPassengers;                // Insert text
+    document.getElementById("Details").appendChild(passengers);
+    passengers.setAttribute("class", id);
+    let initial = flight["initialLocation"];
+    let date = initial["dateTime"];
+    let dateTime = document.createElement("P");                 // Create a <p> element
+    dateTime.innerHTML = "Date: " + date;                // Insert text
+    dateTime.setAttribute("class", id);
+    document.getElementById("Details").appendChild(dateTime);
+    let segemnts = flight["segments"];
+    let total = 0;
+    for (i in segemnts) {
+        let timespan = segemnts[i];
+        let time = timespan["timespanSeconds"];
+        total += parseInt(time);
+    }
+    let temp = Date.parse(date);
+    let d = new Date(temp);
+    d.setSeconds(d.getSeconds() + total);
+    let landing = document.createElement("P");                 // Create a <p> element
     landing.innerHTML = "Landing time: " + d.toUTCString();                // Insert text
     document.getElementById("Details").appendChild(landing);
     landing.setAttribute("class", id);
