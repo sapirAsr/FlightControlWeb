@@ -27,21 +27,28 @@ namespace FlightControlWeb.Controllers
         {
             List<Server> serversList = new List<Server>();
             bool addBool = _cache.TryGetValue("servers", out List<string> serverIds);
-            foreach (string id in serverIds)
+            try
             {
-                _cache.TryGetValue(id, out Server server);
-                serversList.Add(server);    
+                foreach (string id in serverIds)
+                {
+                    _cache.TryGetValue(id, out Server server);
+                    serversList.Add(server);
+                }
+                return serversList;
+                
             }
-
-            return serversList;
+            catch (Exception)
+            {
+                return serversList;
+            }        
         }
 
 
         [HttpPost]
         // api/servers
         public Server Post(JsonElement planJson)
-        {
-            string server = planJson.ToString();
+        {        
+            string server = planJson.ToString();           
             dynamic jsonObj = JsonConvert.DeserializeObject(server);
             string serverId = jsonObj["ServerId"];
             string url = jsonObj["ServerURL"];
