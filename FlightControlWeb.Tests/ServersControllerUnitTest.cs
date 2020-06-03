@@ -7,8 +7,9 @@ using System.Text.Json;
 namespace FlightControlWeb.Tests
 {
     [TestClass]
-    public class UnitTest1
-    {       
+    public class ServersControllerUnitTest
+    {
+        //This function checks if adding an external server updates the external servers list.
         [TestMethod]
         public void TestExternalListTest()
         {
@@ -34,6 +35,7 @@ namespace FlightControlWeb.Tests
             }
         }
 
+        //This function checks if a delete of external server works as expected.
         [TestMethod]
         public void TestDelete()
         {
@@ -54,6 +56,8 @@ namespace FlightControlWeb.Tests
             Assert.AreEqual(responseList.Count, 0);
 
         }
+
+        //This function tests the post methos of the server.
         [TestMethod]
         public void TestPostServer()
         {
@@ -71,6 +75,7 @@ namespace FlightControlWeb.Tests
             Assert.AreEqual(responseList[0].ServerUrl, servers[0].ServerUrl);
         }
 
+        //This function creates a list of external servers.
         private List<Server> GetServers()
         {
             Server serv1 = new Server { ServerId = "sapir22", ServerUrl = "www.test1.com" };
@@ -86,6 +91,7 @@ namespace FlightControlWeb.Tests
             return serverList;
         }
 
+        //This function creates a new cache and initialize it.
         private IMemoryCache CreateCache()
         {
             IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions());

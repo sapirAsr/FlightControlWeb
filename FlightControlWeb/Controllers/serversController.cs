@@ -22,6 +22,7 @@ namespace FlightControlWeb.Controllers
             _cache = cache;
         }
 
+        //This function returns a list of all the servers.
         [HttpGet]
         public IEnumerable<Server> GetAllServers()
         {
@@ -43,7 +44,7 @@ namespace FlightControlWeb.Controllers
             }        
         }
 
-
+        //This function adds a new server.
         [HttpPost]
         // api/servers
         public Server Post(JsonElement planJson)
@@ -63,6 +64,8 @@ namespace FlightControlWeb.Controllers
             _cache.Set(serverId, s);
             return s;
         }
+
+        //This function deletes a server according to id.
         [HttpDelete("{id}")]
         //api/servers/{id}
         public void Delete(string id)

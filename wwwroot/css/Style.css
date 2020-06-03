@@ -3,7 +3,7 @@
     height: 340px;
 }
 .selected {
-    color: red;
+    color: #700d89;
 }
 tbody#internal_table_body {
     
@@ -12,7 +12,4 @@ tbody#internal_table_body {
 tbody#external_table_body {
    
     overflow: auto;
-}
-.table {
-    
 }

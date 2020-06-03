@@ -1,5 +1,4 @@
-﻿//global 
-let mymap;
+﻿let mymap;
 let markerDict = {};
 let dictPolyLine = {};
 let activeInternalFlights = [];
@@ -9,14 +8,16 @@ let idRowSelected = null;
 let markerSelected = null;
 let planeIcon = L.icon({
     iconUrl: 'lib/plane.png',
-    iconSize: [24, 24], // size of the icon
+    iconSize: [24, 24] 
 });
 let clickedIcon = L.icon({
     iconUrl: 'lib/travel.png',
-    iconSize: [24, 24], // size of the icon
+    iconSize: [24, 24] 
 });
 
-
+/**
+ * loading all the flights from the server and sendung them to functions to handle the information 
+ */
 function functionToBeExecuted() {
     setInterval(function () {
         let xhttp = new XMLHttpRequest();
@@ -27,11 +28,14 @@ function functionToBeExecuted() {
                 if (this.status === 200) {
                     let flightArray = JSON.parse(this.responseText);
                     let listOfIds = [];
+                    //adding all the flights icons to the map
                     addMarkers(flightArray);                   
                     let i;
                     for (i = 0; i < flightArray.length; i++) {  
-                        let flight = flightArray[i];                       
-                        if (!activeInternalFlights.includes(flight.flightId) && !activeExternalFlights.includes(flight.flightId)) {
+                        let flight = flightArray[i];  
+                        //checking if the flight exist in our program
+                        if (!activeInternalFlights.includes(flight.flightId) &&
+                            !activeExternalFlights.includes(flight.flightId)) {
                             let isExternal = flight["isExternal"];
                             if (!isExternal) {
                                 loadInternalFlight(flight);
@@ -45,13 +49,14 @@ function functionToBeExecuted() {
                             if (idRowSelected !== null) {
                                 let row = document.getElementById(idRowSelected);
                                 if (row !== null) {
-                                    row.style.backgroundColor = "yellow";
+                                    row.style.backgroundColor = "Lavender";
                                     row.className += " selected";
                                 }                            
                             }
                         }
                         listOfIds.push(flight.flightId);                   
                     }
+                    //checking if a flight isn't active anymore, if so we delete all the info about it
                     for (i = 0; i < activeFlights.length; i++) {
                         if (!listOfIds.includes(activeFlights[i])) {
                             $('#' + activeFlights[i]).remove();
@@ -68,25 +73,29 @@ function functionToBeExecuted() {
         xhttp.open("GET", "/api/Flights?relative_to=" + currentDate + "&sync_all", true);
         xhttp.send();
     }, 1000);
+    //inserting the map to our program
     initMap();   
 }
-function deleteTrajectory(id) {
-    console.log(dictPolyLine);
-    for (var poly in dictPolyLine[id]) {
-        console.log(dictPolyLine[id][poly]);
-        mymap.removeLayer(dictPolyLine[id][poly]);
-    }
-    dictPolyLine[id] = [];
-}
+
+/**
+ * loading flights to the external flights table
+ * @param {any} flight the flight to load to the table 
+ */
 function loadExternalFlight(flight) {
-    $("#external_table_body").append("<tr class='select'" + "id='" + flight.flightId + "'" + "><td class='select'>" + flight.flightId + "</td>" +
+    $("#external_table_body").append("<tr class='select'" + "id='" + flight.flightId +
+        "'" + "><td class='select'>" + flight.flightId + "</td>" +
         "<td class='select'>" + flight.companyName + "</td></tr>");
     $(".select").on("click", function () {
         selectExternalFlight();
     });
 }
+/**
+ * loading flights to the internal flights table
+ * @param {any} flight the flight to load to the table
+ */
 function loadInternalFlight(flight) {
-    $("#internal_table_body").append("<tr class='select'" + "id='" + flight.flightId + "'" + "><td>" + flight.flightId + "</td>" +
+    $("#internal_table_body").append("<tr class='select'" + "id='" + flight.flightId +
+        "'" + "><td>" + flight.flightId + "</td>" +
         "<td >" + flight.companyName + "</td>" + "<td class='delete'>" +
         '<i onclick="deleteflight()" class="far fa-window-close"></i>' + "</td></tr> ");
     $(".select").on("click", function () {
@@ -100,6 +109,9 @@ function loadInternalFlight(flight) {
         $(this).closest("tr").remove();
     });
 }
+/**
+ * setting the map
+  */
 function initMap() {
     mymap = L.map('mapid').setView([32.006333,34.873331,], 13);
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoic2FwaXJhc3IiLCJhIjoiY2thbDlxaDcxMHMzNTJzcGloMGl2dWJwcSJ9.BiS3Rh5E7nvb1L1zyCcjuQ', {
@@ -112,6 +124,9 @@ function initMap() {
     }).addTo(mymap);
     mymap.on('click', onMapClick);
 }
+/**
+ * undo actions when clicking the map
+ * */
 function onMapClick() {
    for (var key in dictPolyLine) {      
        for (var poly in dictPolyLine[key]) {
@@ -135,6 +150,10 @@ function onMapClick() {
         idRowSelected = null;
     } 
 }
+/**
+ * 
+ * @param {any} array of flights to set all the markers
+ */
 function addMarkers(array) {
     for (var key in markerDict) {
         mymap.removeLayer(markerDict[key]);
@@ -143,7 +162,7 @@ function addMarkers(array) {
         let flight = array[i];
         let longitude = flight["longitude"];
         let latitude = flight["latitude"];
-        let id = flight["flightId"];        
+        let id = flight["flightId"];
         let marker;
         if (id !== markerSelected) {
              marker = L.marker([latitude, longitude], { icon: planeIcon }).addTo(mymap);
@@ -156,23 +175,26 @@ function addMarkers(array) {
     }
 }
 
+/**
+ * 
+ * @param {any} flight set the flight marker on click function
+ */
 function onMarkerClick(flight) {
     let id = flight["flightId"];
     let isExternal = flight["isExternal"];
     let marker = markerDict[id];
     marker.on('click', function () {
-        markerSelected = id;       
+        markerSelected = id;  
+        for (var key in dictPolyLine) {
+            for (var poly in dictPolyLine[key]) {
+                mymap.removeLayer(dictPolyLine[key][poly]);
+            }
+        }
         if (!isExternal) {
+           
             flightDetails(id);
             showTrajectory(id);
         } else {
-            if (markerSelected !== null) {
-                for (var key in dictPolyLine) {
-                    for (var poly in dictPolyLine[key]) {
-                        mymap.removeLayer(dictPolyLine[key][poly]);
-                    }
-                }
-            }
             //get the details and show the trajectory
             getDetailsExternal(id);
         }
@@ -180,35 +202,11 @@ function onMarkerClick(flight) {
         selectFlightFromMap(id);
     });
 }
-function addExternalMarker(flight) { 
-    let id = flight["flightId"];
-    console.log(id);
-    markerDict[id].remove();
-    let longitude = flight["longitude"];
-    let latitude = flight["latitude"]; 
-    let marker;
-    if (id !== markerSelected) {
-        marker = L.marker([latitude, longitude], { icon: planeIcon }).addTo(mymap);
-    } else {
-        marker = L.marker([latitude, longitude], { icon: clickedIcon }).addTo(mymap);
-    }
-    markerDict[id] = marker;
-    marker.on('click', function () {
-        if (markerSelected !== id) {
-            if (markerSelected !== null) {
-                for (var key in dictPolyLine) {
-                    for (var poly in dictPolyLine[key]) {
-                        mymap.removeLayer(dictPolyLine[key][poly]);
-                    }
-                }
-            }
-            markerSelected = id;
-            marker.setIcon(clickedIcon);            
-            selectFlightFromMap(id);           
-            getDetailsExternal(id);          
-        }
-    });    
-}
+
+/**
+ * 
+ * @param {any} id of the internal flight we get the flight plan and show it trajectory on the map
+ */
 function showTrajectory(id) { 
     let listPolyLines = [];
     let xhttp = new XMLHttpRequest();
@@ -249,31 +247,86 @@ function showTrajectory(id) {
     xhttp.open("GET", "/api/FlightPlan/" + id, true);
     xhttp.send();
 }
+
+/**
+ * 
+ * @param {any} flight the flight plan of the external flight
+ * @param {any} id of the external flight we get the flught plan and show it trajectory on the map
+ */
+function externalTrajectory(flight, id) {
+    let listPolyLines = [];
+    let initialPoint = flight.initial_location;
+    let initialLongtitude = initialPoint["longitude"];
+    let initialLatitude = initialPoint["latitude"];
+    let segments = flight["segments"];
+    let len = flight["segments"].length;
+    for (var i = 0; i < len; i++) {
+        let endPoint = segments[i];
+        let endLongtitude = endPoint["longitude"];
+        let endLatitude = endPoint["latitude"];
+        let start = new L.LatLng(initialLatitude, initialLongtitude);
+        let end = new L.LatLng(endLatitude, endLongtitude);
+        let pointList = [start, end];
+        let firstpolyline = new L.Polyline(pointList, {
+            color: 'red',
+            weight: 5,
+            opacity: 0.5,
+            smoothFactor: 1
+        });
+        firstpolyline.addTo(mymap);
+        listPolyLines.push(firstpolyline);
+        initialLatitude = endLatitude;
+        initialLongtitude = endLongtitude;
+    }
+    dictPolyLine[id] = listPolyLines;
+}
+/**
+ * 
+ * @param {any} id of the flight we select from the table when clicking a flight marker from map
+ */
 function selectFlightFromMap(id) {
+    console.log(idRowSelected);
+    if (idRowSelected !== null) {
+        let rowSelected = document.getElementById(idRowSelected);
+        rowSelected.style.backgroundColor = "";
+        rowSelected.classList.remove('selected');
+        
+    }   
     idRowSelected = id;
     markerSelected = id;
+    console.log(idRowSelected);
     let row = document.getElementById(id);  
-    row.style.backgroundColor = "yellow";
+    row.style.backgroundColor = "Lavender";
     row.className += " selected";
 }
+/**
+ * select flight from internal flights table
+  */
 function selectFlight() { 
     let table = document.getElementById('internalFlightsTable');
     let rows = table.getElementsByTagName('tr');
+    let externalTable = document.getElementById('externalFlightsTable');
+    let externalRows = externalTable.getElementsByTagName('tr');
     for (var i = 0; i < rows.length; i++) {
         // Take each row
         let row = rows[i];
         // do something on onclick event for row
-        row.onclick = function () {
+        row.onclick = function () {           
             // Get the row id 
             let rowId = this.rowIndex;
             for (var row = 0; row < rows.length; row++) {
                 rows[row].style.backgroundColor = "";
                 rows[row].classList.remove('selected');
             }
+            for (var rowEx = 0; rowEx < externalRows.length; rowEx++) {
+                externalRows[rowEx].style.backgroundColor = "";
+                externalRows[rowEx].classList.remove('selected');
+            }
+
             let rowSelected = table.getElementsByTagName('tr')[rowId];
-            rowSelected.style.backgroundColor = "yellow";
+            rowSelected.style.backgroundColor = "Lavender";
             rowSelected.className += " selected";
-            if (idRowSelected !== rowSelected.cells[0].innerHTML) {
+            if (idRowSelected !== rowSelected.cells[0].innerHTML) {             
                 deleteTrajectory(idRowSelected);
                 idRowSelected = rowSelected.cells[0].innerHTML;
                 flightDetails(rowSelected.cells[0].innerHTML);
@@ -285,9 +338,14 @@ function selectFlight() {
         };
     }
 }
+/**
+ * select flight from external flights table
+  */
 function selectExternalFlight() {
     let table = document.getElementById('externalFlightsTable');
     let rows = table.getElementsByTagName('tr');
+    let internalTable = document.getElementById('internalFlightsTable');
+    let internalRows = internalTable.getElementsByTagName('tr');
     for (var i = 0; i < rows.length; i++) {
         // Take each row
         let row = rows[i];
@@ -299,8 +357,12 @@ function selectExternalFlight() {
                 rows[row].style.backgroundColor = "";
                 rows[row].classList.remove('selected');
             }
+            for (var rowIn = 0; rowIn < internalRows.length; rowIn++) {
+                internalRows[rowIn].style.backgroundColor = "";
+                internalRows[rowIn].classList.remove('selected');
+            }
             let rowSelected = table.getElementsByTagName('tr')[rowId];
-            rowSelected.style.backgroundColor = "yellow";
+            rowSelected.style.backgroundColor = "Lavender";
             rowSelected.className += " selected";
             if (idRowSelected !== rowSelected.cells[0].innerHTML) {
                 deleteTrajectory(idRowSelected);
@@ -313,11 +375,14 @@ function selectExternalFlight() {
         };
     }
 }
+/**
+ * 
+ * @param {any} id of the flight we show it details
+ */
 function flightDetails(id) {
     let details = document.getElementById("Details");
     details.innerHTML = "";
     dictPolyLine = {};
-
     if (activeInternalFlights.includes(id)) {
         details = document.getElementById("Details");
         details.innerHTML = "";
@@ -339,6 +404,10 @@ function flightDetails(id) {
         getDetailsExternal(id);
     }
 }
+/**
+ * 
+ * @param {any} id of the external flight we show it details
+ */
 function getDetailsExternal(id) {
     let details = document.getElementById("Details");
     details.innerHTML = "";
@@ -362,33 +431,11 @@ function getDetailsExternal(id) {
     xhttp.send();
 
 }
-function externalTrajectory(flight) {
-    let listPolyLines = [];
-    let initialPoint = flight.initial_location;
-    let initialLongtitude = initialPoint["longitude"];
-    let initialLatitude = initialPoint["latitude"];
-    let segments = flight["segments"];
-    let len = flight["segments"].length;
-    for (var i = 0; i < len; i++) {
-        let endPoint = segments[i];
-        let endLongtitude = endPoint["longitude"];
-        let endLatitude = endPoint["latitude"];
-        let start = new L.LatLng(initialLatitude, initialLongtitude);
-        let end = new L.LatLng(endLatitude, endLongtitude);
-        let pointList = [start, end];
-        let firstpolyline = new L.Polyline(pointList, {
-            color: 'red',
-            weight: 5,
-            opacity: 0.5,
-            smoothFactor: 1
-        });
-        firstpolyline.addTo(mymap);
-        listPolyLines.push(firstpolyline);       
-        initialLatitude = endLatitude;
-        initialLongtitude = endLongtitude;
-    }
-    dictPolyLine[flight.flightId] = listPolyLines;
-}
+/**
+ * 
+ * @param {any} url of the request to the flight plan we want
+ * @param {any} id of the flight
+ */
 function getFlightPlan(url, id) {
     let details = document.getElementById("Details");
     details.innerHTML = "";
@@ -398,7 +445,7 @@ function getFlightPlan(url, id) {
             if (this.status === 200) {
                 let flight = JSON.parse(this.responseText);
                 parseExternalFlightDetails(flight, id);
-                externalTrajectory(flight);
+                externalTrajectory(flight,id);
             } else {
                 alert("error in getting external flight details");
             }
@@ -407,22 +454,42 @@ function getFlightPlan(url, id) {
     xhttp.open("GET",url, true);
     xhttp.send();
 }
-function deleteflight(id) {
-    deleteFromServer(id);
-    deleteFlightDetails(id);  
-}
+/**
+ * 
+ * @param {any} id of the flight we want to delete from the server
+ */
 function deleteFromServer(id) {
     let xhttp = new XMLHttpRequest();
     xhttp.open("DELETE", "/api/Flights/" + id, true);
     xhttp.send(null);
 }
-function deleteFlightDetails(x) {
-    let details = document.getElementsByClassName(x);
+/**
+ * 
+ * @param {any} id of the flight we want to delete it details
+ */
+function deleteFlightDetails(id) {
+    let details = document.getElementsByClassName(id);
     details.innerHTML = "";
     for (i in details) {
         details[i].innerHTML = "";
     }
 }
+/**
+ * 
+ * @param {any} id of the flight we want to deltet its trajectory
+ */
+function deleteTrajectory(id) {
+    console.log(dictPolyLine);
+    for (var poly in dictPolyLine[id]) {
+        console.log(dictPolyLine[id][poly]);
+        mymap.removeLayer(dictPolyLine[id][poly]);
+    }
+    dictPolyLine[id] = [];
+}
+/*
+ *function gets a file from the browser and send it to the server
+ *
+ */
 $('#txtUploadFile').on('change', function (e) {
     let json;
     let files = e.target.files; // FileList object
@@ -452,6 +519,11 @@ $('#txtUploadFile').on('change', function (e) {
         reader.readAsText(f);
     }
 });
+/**
+ * 
+ * @param {any} flight the flight plan to parse it details
+ * @param {any} id of the external flight
+ */
 function parseExternalFlightDetails(flight, id) {
     let heading = document.createElement("H3");
     heading.innerHTML = "Flight Details";
@@ -493,6 +565,11 @@ function parseExternalFlightDetails(flight, id) {
     document.getElementById("Details").appendChild(landing);
     landing.setAttribute("class", id);    
 }
+/**
+ *
+ * @param {any} flight the flight plan to parse it details
+ * @param {any} id of the internal flight
+ */
 function parseInternalFlightDetails(flight, id){
     let heading = document.createElement("H3");
     heading.innerHTML = "Flight Details";

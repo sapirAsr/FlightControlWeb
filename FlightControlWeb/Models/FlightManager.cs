@@ -9,15 +9,13 @@ namespace FlightControlWeb.Models
     public class FlightManager : IFlightManager
     {
 
-        private static List<Flight> flights = new List<Flight>()
-        {
-            //new Flight("s","Realmo Air", 236, false,4, 120)
-        };
+        private static List<Flight> flights = new List<Flight>() { };
+        //This function adds new flight to the flight list.
         public void AddFlight(Flight f)
         {
             flights.Add(f);
         }
-
+        //This function deletes flight drom the flight list.
         public void DeleteFlight(string id)
         {
             Flight f = flights.Where(x => x.FlightId == id).FirstOrDefault();
@@ -25,18 +23,18 @@ namespace FlightControlWeb.Models
                 throw new Exception("flight not found");
             flights.Remove(f);
         }
-
+        //This function returns the flight list.
         public IEnumerable<Flight> GetAllFlights()
         {
             return flights;
         }
-
+        //This function returns a flight according to given id.
         public Flight GetFlightById(string id)
         {
             Flight f = flights.Where(x => x.FlightId == id).FirstOrDefault();
             return f;
         }
-
+        //This function updates the deatils of a given flight.
         public void UpdateFlight(Flight f)
         {
             Flight flight = flights.Where(x => x.FlightId == f.FlightId).FirstOrDefault();
@@ -45,7 +43,6 @@ namespace FlightControlWeb.Models
             flight.Latitude = f.Latitude;
             flight.Longitude = f.Longitude;
             flight.Passengers = f.Passengers;
-            
         }
 
         // Generate a random number between two numbers  
@@ -69,6 +66,7 @@ namespace FlightControlWeb.Models
                 return builder.ToString().ToLower();
             return builder.ToString();
         }
+        //This function generates new id to every flight.
         public string GenerateId()
         {
             StringBuilder builder = new StringBuilder();

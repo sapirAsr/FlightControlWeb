@@ -8,13 +8,10 @@ namespace FlightControlWeb.Models
 {
     public class FlightPlanManager : IFlightPlanManager
     {
-        private static List<FlightPlan> flightPlans = new List<FlightPlan>()
-        {
-            //new FlightPlan{FlightId = "s", CompanyName="Realmo Air", Passengers = 236,
-            //    InitialLocation = new InitialLocation{Longitude = 4, Latitude = 120, DateTime = new DateTime("2019-04-27T19:29:26Z")  },)} }
-        };
+        private static List<FlightPlan> flightPlans = new List<FlightPlan>() { };
 
         private FlightManager flightManager = new FlightManager();
+        //This function adds new flight plan to the flight plans list
         public void AddFlight(FlightPlan f)
         {
             string id = flightManager.GenerateId();
@@ -24,7 +21,7 @@ namespace FlightControlWeb.Models
             flightPlans.Add(f);
         }
 
-
+        //This function delets a flightplan according to id.
         public void DeleteFlight(string id)
         {
             FlightPlan f = flightPlans.Where(x => x.FlightId == id).FirstOrDefault();
@@ -32,18 +29,18 @@ namespace FlightControlWeb.Models
                 throw new Exception("flight not found");
             flightPlans.Remove(f);
         }
-
+        //This function returns the list of the flight plans.
         public IEnumerable<FlightPlan> GetAllFlights()
         {
             return flightPlans;
         }
-
+        //This function returns a flight according to a given id.
         public FlightPlan GetFlightById(string id)
         {
             FlightPlan f = flightPlans.Where(x => x.FlightId == id).FirstOrDefault();
             return f;
         }
-
+        //This function update the deatils of a given flight plan.
         public void UpdateFlight(FlightPlan f)
         {
             FlightPlan flight = flightPlans.Where(x => x.FlightId == f.FlightId).FirstOrDefault();
@@ -52,10 +49,8 @@ namespace FlightControlWeb.Models
             flight.InitialLocation = f.InitialLocation;
             flight.Passengers = f.Passengers;
             flight.Segments = f.Segments;
-     
-
         }
-
+        //This function returns the flight plans list.
         IEnumerable<FlightPlan> IFlightPlanManager.GetAllFlights()
         {
             return flightPlans;
@@ -81,6 +76,7 @@ namespace FlightControlWeb.Models
                 return builder.ToString().ToLower();
             return builder.ToString();
         }
+        //This function generates new id to every flight plan.
         public string GenerateId()
         {
             StringBuilder builder = new StringBuilder();
@@ -88,7 +84,5 @@ namespace FlightControlWeb.Models
             builder.Append(RandomNumber(1000, 9999));
             return builder.ToString();
         }
-
-
     }
 }

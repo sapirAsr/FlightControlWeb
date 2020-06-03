@@ -74,6 +74,7 @@ namespace FlightControlWeb
                 return builder.ToString().ToLower();
             return builder.ToString();
         }
+        //This function generates new id to every flight.
         public string GenerateId()
         {
             StringBuilder builder = new StringBuilder();

@@ -21,6 +21,8 @@ namespace FlightControlWeb.Controllers
         {
             _cache = cache;
         }
+
+        //This function returns all the flights that according to the relative to
         [HttpGet]
         // /api/Flights?relative_to=<DATE_TIME>
         public async Task<List<Flight>> GetAllFlights(string relative_to)
@@ -38,6 +40,8 @@ namespace FlightControlWeb.Controllers
             }
             return listflights;
         }
+
+        //This function returns only the flights from the internal server
         private List<Flight> getInternalFlights(DateTime relativeTime)
         {
             List<Flight> flights = new List<Flight>();
@@ -55,21 +59,20 @@ namespace FlightControlWeb.Controllers
                 int len = segments.Length;
                 if (startFlightDate > relativeTime)
                 {
-                    // This Flight didnt started yet.
+                    // if the flight didnt started yet.
                     continue;
                 }
                 // Stop when we are in the segment or there are no more segments.
                 while ((startFlightDate <= relativeTime) && (index < len))
                 {
                     currFlightDate = startFlightDate;
-                    // Each time- add the timespan seconds of the segments.
+                    // sums all the segments timespan
                     startFlightDate = startFlightDate.AddSeconds(segments[index].TimespanSeconds);
                     index++;
                 }
-                // If we are in the segment (the flight didnt finished yet).
+                // The flight didn't end yet.
                 if (startFlightDate >= relativeTime)
-                {
-                    // Add flight to list.
+                {                  
                     Flight flight = CalcLocation(relativeTime, currFlightDate, flightPlan, index, segments);
                     flights.Add(flight);
                 }
@@ -77,42 +80,40 @@ namespace FlightControlWeb.Controllers
             return flights;
         }
 
+        //This function is responsible for the interpolation.
         private Flight CalcLocation(DateTime relativeDate, DateTime currTimeFlifgt, FlightPlan flightPlan, int index, Segment[] flightSegments)
         {
             double startLongtitude = 0, endLongtitude, startLatitude = 0, endLatitude, finalLongtitude, finalLatitude;
             double timePassed, fracRate;
-            // Find how much time passed from segment till now.
+            // finds the time that passed until now.
             timePassed = relativeDate.Subtract(currTimeFlifgt).TotalSeconds;
             // Find the time ratio.
             fracRate = timePassed / flightSegments[index - 1].TimespanSeconds;
-            // Check if we are in the first segment.
+            // the first segment
             if (index == 1)
-            {
-                // The last coordinate is from Initial_Location.
+            {                
                 startLongtitude = flightPlan.InitialLocation.Longitude;
                 startLatitude = flightPlan.InitialLocation.Latitude;
             }
             else
             {
-                // The last coordinate is from last segment.
                 startLongtitude = flightSegments[index - 2].Longitude;
                 startLatitude = flightSegments[index - 2].Latitude;
             }
             // The current segment's coordinates.
             endLongtitude = flightSegments[index - 1].Longitude;
             endLatitude = flightSegments[index - 1].Latitude;
-            // Linear interpolation
-
+            // calculate the intepolation.
             finalLatitude = startLatitude + (fracRate * (endLatitude - startLatitude));
             finalLongtitude = startLongtitude + (fracRate * (endLongtitude - startLongtitude));
-
-            // Create new Flight with the details we found.
             Flight flight = new Flight(flightPlan.FlightId, flightPlan.CompanyName,
-                flightPlan.Passengers, false, finalLatitude, finalLongtitude, flightPlan.InitialLocation.DateTime);
+                flightPlan.Passengers, false, finalLatitude, finalLongtitude,
+                flightPlan.InitialLocation.DateTime);
             return flight;
         }
 
-        private async Task<List<Flight>> getExternalFlights(string relativeTime)
+        //This function returns all the flight from external servers.
+       private async Task<List<Flight>> getExternalFlights(string relativeTime)
         {
             //List<Flight> flights = new List<Flight>();
             _cache.TryGetValue("servers", out List<string> serverIds);
@@ -131,6 +132,8 @@ namespace FlightControlWeb.Controllers
             }
             return externalFlights;
         }
+
+        //This function calls the GET method of the server.
         private async Task<List<Flight>> getFlights(string url)
         {
             List<Flight> flights = new List<Flight>();            
@@ -157,8 +160,8 @@ namespace FlightControlWeb.Controllers
             }
             return flights;
         }
-      
-        //function deletes the flight with this id
+
+        //This function deletes the flight acording to id
         [HttpDelete("{id}")]
         //api/Flights/{id}
         public void Delete(string id)

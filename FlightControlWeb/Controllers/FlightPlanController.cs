@@ -27,7 +27,7 @@ namespace FlightControlWeb.Controllers
         {
             _cache = cache;
         }
-        //function returns the flight plan of the flight with this id
+        //This function returns the flight plan of a flight with his id
         [HttpGet("{id}")]
         //api/FlightPlan/{id}
         public ActionResult<FlightPlan> Get(string id)
@@ -42,7 +42,7 @@ namespace FlightControlWeb.Controllers
         }
 
 
-        //function post the flight plan of a new flight
+        //This function posts the flight plan of a new flight
         [HttpPost]
         // api/FlightPlan
         public ActionResult<FlightPlan> Post(JsonElement planJson)
@@ -51,6 +51,7 @@ namespace FlightControlWeb.Controllers
             {
                 string plan = planJson.ToString();
                 dynamic jsonObj = JsonConvert.DeserializeObject(plan);
+                //parsing the json
                 long passengers = jsonObj["passengers"];
                 string company_name = jsonObj["company_name"];
                 double longitude = jsonObj["initial_location"]["longitude"];
