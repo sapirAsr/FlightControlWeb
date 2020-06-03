@@ -9,11 +9,8 @@ namespace FlightControlWeb
 {
     public class Flight
     {
-        private string id;
-
         [JsonProperty("flight_id")]
         public string FlightId { get; set; }
-
 
         [JsonProperty("longitude")]
         public double Longitude { get; set; }
@@ -43,7 +40,7 @@ namespace FlightControlWeb
             Passengers = f.Passengers;
             CompanyName = f.CompanyName;
             DateTime = f.InitialLocation.DateTime;
-
+            string temp = FlightId;
         }
         public Flight(string id , string companyName, long passengers, bool isExternal,double latitude, double longitude, DateTime dateTime)
         {

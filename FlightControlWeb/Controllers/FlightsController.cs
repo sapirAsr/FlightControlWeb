@@ -23,7 +23,7 @@ namespace FlightControlWeb.Controllers
         }
         [HttpGet]
         // /api/Flights?relative_to=<DATE_TIME>
-        public async Task<List<Flight>> GetAllFlights(string? relative_to = null)
+        public async Task<List<Flight>> GetAllFlights(string relative_to)
         {
             List<Flight> listflights = new List<Flight>();
             string requestStr = Request.QueryString.Value;
@@ -91,9 +91,6 @@ namespace FlightControlWeb.Controllers
                 // The last coordinate is from Initial_Location.
                 startLongtitude = flightPlan.InitialLocation.Longitude;
                 startLatitude = flightPlan.InitialLocation.Latitude;
-                Console.WriteLine(startLongtitude);
-                Console.WriteLine(startLatitude);
-
             }
             else
             {

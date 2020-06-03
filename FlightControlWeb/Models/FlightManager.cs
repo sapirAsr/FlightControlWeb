@@ -8,6 +8,7 @@ namespace FlightControlWeb.Models
 {
     public class FlightManager : IFlightManager
     {
+
         private static List<Flight> flights = new List<Flight>()
         {
             //new Flight("s","Realmo Air", 236, false,4, 120)
